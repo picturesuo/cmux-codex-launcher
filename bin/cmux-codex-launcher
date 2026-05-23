@@ -16,6 +16,7 @@ DEV_COMMAND_OVERRIDE=""
 DRY_RUN=0
 PRINT_LAYOUT=0
 OPEN_CODEX_APP_OVERRIDE=""
+AUTOSTART_ROLES_OVERRIDE=""
 CREATE_CMUX=1
 RESUME_LAST=0
 STATUS_LAST=0
@@ -38,6 +39,8 @@ Options:
   --dev-command <command> Override the dev-server terminal command
   --app                   Open Codex desktop app (default unless profile disables it)
   --no-app                Do not open Codex desktop app
+  --autostart-roles       Send each role prompt immediately to Codex CLI
+  --no-autostart-roles    Open role tabs idle (default for Penny)
   --no-cmux               Do not create a cmux workspace
   --dry-run               Print launch plan and layout without opening anything
   --print-layout          Print only the cmux layout JSON
@@ -220,6 +223,7 @@ Workflow:
 - Keep write scope narrow and disjoint from other roles.
 - Report changed files, verification, risks, and next action.
 - Do not add broad product modes, connectors, or unrelated refactors unless the user asks.
+- Do not run cmux-codex-launcher or create another cmux workspace unless the user explicitly asks.
 EOF
 }
 
@@ -248,7 +252,11 @@ build_layout() {
 
   for role in "${CML_ROLE_NAMES[@]}"; do
     role_prompt="$(build_role_prompt "$role" "$project_name" "$project_dir" "$session_file")"
-    role_command="codex -C $q_project_dir -m $q_model -c $q_config -s $q_sandbox -a $q_approval $(shell_quote "$role_prompt")"
+    if [ "$CML_AUTOSTART_ROLES" = "true" ]; then
+      role_command="codex -C $q_project_dir -m $q_model -c $q_config -s $q_sandbox -a $q_approval $(shell_quote "$role_prompt")"
+    else
+      role_command="printf 'Role: %s\\nProject: %s\\nShared context: %s\\n\\nCodex opens idle here to avoid unintended background work. Paste the task when you want this role to start.\\n\\n' $(shell_quote "$role") $(shell_quote "$project_dir") $q_session_file; exec codex -C $q_project_dir -m $q_model -c $q_config -s $q_sandbox -a $q_approval"
+    fi
     surfaces+=("$(terminal_surface "$role" "$role_command")")
   done
 
@@ -329,6 +337,12 @@ while [ "$#" -gt 0 ]; do
     --no-app)
       OPEN_CODEX_APP_OVERRIDE="false"
       ;;
+    --autostart-roles)
+      AUTOSTART_ROLES_OVERRIDE="true"
+      ;;
+    --no-autostart-roles)
+      AUTOSTART_ROLES_OVERRIDE="false"
+      ;;
     --no-cmux)
       CREATE_CMUX=0
       ;;
@@ -388,6 +402,7 @@ CML_CODEX_EFFORT="${CML_CODEX_EFFORT:-medium}"
 CML_SANDBOX="${CML_SANDBOX:-workspace-write}"
 CML_APPROVAL="${CML_APPROVAL:-on-request}"
 CML_OPEN_CODEX_APP="${OPEN_CODEX_APP_OVERRIDE:-${CML_OPEN_CODEX_APP:-true}}"
+CML_AUTOSTART_ROLES="${AUTOSTART_ROLES_OVERRIDE:-${CML_AUTOSTART_ROLES:-false}}"
 
 if [ "${#CML_ROLE_NAMES[@]}" -eq 0 ]; then
   CML_ROLE_NAMES=("lead" "build" "verify")
@@ -413,6 +428,7 @@ project_dir: $CML_PROJECT_DIR
 workspace: $CML_WORKSPACE_NAME
 codex_app: $CML_OPEN_CODEX_APP
 cmux_workspace: $CREATE_CMUX
+autostart_roles: $CML_AUTOSTART_ROLES
 model: $CML_CODEX_MODEL
 effort: $CML_CODEX_EFFORT
 sandbox: $CML_SANDBOX
@@ -445,4 +461,3 @@ if [ "$CREATE_CMUX" -eq 1 ]; then
     --layout "$LAYOUT_JSON" \
     --focus "$FOCUS_WORKSPACE"
 fi
-

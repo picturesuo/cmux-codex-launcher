@@ -19,6 +19,7 @@ bin/cmux-codex-launcher --resume-last
 bin/cmux-codex-launcher --status-last
 bin/cmux-codex-launcher --project /path/to/repo --name "Project"
 bin/cmux-codex-launcher --print-layout --profile penny
+bin/cmux-codex-launcher --autostart-roles --profile penny
 ```
 
 ### `profiles/*.env`

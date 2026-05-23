@@ -38,6 +38,10 @@ For a profile, the launcher can open:
 - an optional browser preview pane
 - the Codex desktop app for the same workspace path
 
+By default the role tabs open Codex CLI idle. That keeps the workspace ready
+without letting background agents run setup commands or create recursive cmux
+workspaces before you give them the actual task.
+
 The launcher writes a shared context file under:
 
 ```text
@@ -62,6 +66,7 @@ CML_DEV_COMMAND='if lsof -nP -iTCP:3007 -sTCP:LISTEN >/dev/null 2>&1; then print
 CML_PLAN_DOC="docs/penny-create-operating-outline.md"
 CML_EXTRA_DOCS=("docs/yc-demo-coding-brief.md" "docs/yc-demo-runbook.md")
 CML_ROLE_NAMES=("lead" "create-ui" "brain-evidence" "learn-canvas" "export-verify")
+CML_AUTOSTART_ROLES="false"
 ```
 
 Do not put API keys, database passwords, OAuth secrets, or tokens in a profile.
@@ -76,6 +81,7 @@ bin/cmux-codex-launcher --resume-last
 bin/cmux-codex-launcher --status-last
 bin/cmux-codex-launcher --print-layout --profile penny
 bin/cmux-codex-launcher --no-app --profile penny
+bin/cmux-codex-launcher --autostart-roles --profile penny
 ```
 
 ## Why This Shape

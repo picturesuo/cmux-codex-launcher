@@ -31,6 +31,7 @@ read_when:
 - `repo`: `scripts/test-launcher.sh` is the main smoke test.
 - `repo`: `scripts/doctor.sh` checks local prerequisites and Penny profile resolution.
 - `repo`: `scripts/install-local.sh` creates `~/bin/cmux-codex-launcher`.
+- `repo`: `CML_AUTOSTART_ROLES=false` opens role tabs idle; use `--autostart-roles` only for intentional background agents.
 - `repo`: Public files must not contain secrets, tokens, OAuth credentials, private data, or local `.env` contents.
 
 ## Penny Profile Facts
@@ -42,6 +43,7 @@ read_when:
 - `penny`: Plan doc is `docs/penny-create-operating-outline.md`.
 - `penny`: Extra read-first docs are `docs/yc-demo-coding-brief.md` and `docs/yc-demo-runbook.md`.
 - `penny`: Role tabs are `lead`, `create-ui`, `brain-evidence`, `learn-canvas`, and `export-verify`.
+- `penny`: Role tabs default to idle Codex CLI sessions to avoid recursive launcher starts.
 
 ## External References
 

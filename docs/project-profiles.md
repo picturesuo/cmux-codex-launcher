@@ -36,6 +36,7 @@ No-argument launch uses:
 - `CML_SANDBOX`
 - `CML_APPROVAL`
 - `CML_OPEN_CODEX_APP`
+- `CML_AUTOSTART_ROLES`
 
 Arrays use bash syntax:
 
@@ -44,9 +45,12 @@ CML_ROLE_NAMES=("lead" "build" "verify")
 CML_EXTRA_DOCS=("docs/roadmap.md" "docs/runbook.md")
 ```
 
+Set `CML_AUTOSTART_ROLES=false` when the launcher should open role tabs ready
+but idle. Set it to `true` only when you intentionally want each Codex tab to
+start work immediately from its role prompt.
+
 ## Safety
 
 Do not store secrets in a profile. Store secrets in the target project’s ignored
 `.env.local`, a keychain, or a secret manager. The launcher can source
 `.env.local` from `CML_DEV_COMMAND` if a dev server needs it.
-
