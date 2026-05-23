@@ -58,7 +58,7 @@ CML_PROJECT_NAME="Penny"
 CML_PROJECT_DIR="/Users/bensuo/Desktop/penny"
 CML_WORKSPACE_NAME="Penny Create"
 CML_PREVIEW_URL="http://localhost:3007"
-CML_DEV_COMMAND='set -a; [ -f .env.local ] && source .env.local; set +a; PENNY_SKIP_DATABASE_PREP=true PENNY_AUTH_MODE=dev PORT=3007 pnpm dev'
+CML_DEV_COMMAND='if lsof -nP -iTCP:3007 -sTCP:LISTEN >/dev/null 2>&1; then printf "Penny dev server is already running at http://localhost:3007\n"; exec "${SHELL:-/bin/zsh}" -l; fi; set -a; [ -f .env.local ] && source .env.local; set +a; PENNY_SKIP_DATABASE_PREP=true PENNY_AUTH_MODE=dev PORT=3007 pnpm dev'
 CML_PLAN_DOC="docs/penny-create-operating-outline.md"
 CML_EXTRA_DOCS=("docs/yc-demo-coding-brief.md" "docs/yc-demo-runbook.md")
 CML_ROLE_NAMES=("lead" "create-ui" "brain-evidence" "learn-canvas" "export-verify")
@@ -91,4 +91,3 @@ The implementation follows current cmux patterns:
 
 See [docs/launcher-design.md](docs/launcher-design.md) for the design notes and
 external references.
-
