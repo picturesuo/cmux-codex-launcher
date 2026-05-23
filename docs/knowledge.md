@@ -27,6 +27,7 @@ read_when:
 - `repo`: Shared task context files live in `~/.codex/cmux-codex-launcher/`.
 - `repo`: The launcher opens cmux workspaces with `cmux new-workspace --layout`.
 - `repo`: The launcher opens Codex Desktop with `codex app <project path>` when enabled.
+- `repo`: The plan tab does not auto-run `cmux markdown open`; run the printed command after launch to avoid workspace recursion during startup.
 - `repo`: Project-local cmux actions live in `.cmux/cmux.json`.
 - `repo`: `scripts/test-launcher.sh` is the main smoke test.
 - `repo`: `scripts/doctor.sh` checks local prerequisites and Penny profile resolution.

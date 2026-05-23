@@ -33,7 +33,7 @@ The default profile is `penny`, so a no-argument run opens Penny unless you set
 For a profile, the launcher can open:
 
 - a cmux workspace with named Codex CLI tabs
-- a plan/docs terminal that opens a markdown panel
+- a plan/docs terminal with the exact markdown viewer command
 - an optional dev-server tab
 - an optional browser preview pane
 - the Codex desktop app for the same workspace path
