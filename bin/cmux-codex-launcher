@@ -232,7 +232,7 @@ build_layout() {
   local project_dir=$2
   local session_file=$3
   local plan_doc=${CML_PLAN_DOC:-}
-  local q_project_dir q_session_file q_model q_config q_sandbox q_approval
+  local q_project_dir q_session_file q_model q_config q_sandbox q_approval q_plan_path
   local plan_command role role_prompt role_command dev_command right_surface left_json right_json surfaces_json
   local -a surfaces=()
 
@@ -244,7 +244,8 @@ build_layout() {
   q_approval="$(shell_quote "$CML_APPROVAL")"
 
   if [ -n "$plan_doc" ] && [ -f "$project_dir/$plan_doc" ]; then
-    plan_command="cmux markdown open $(shell_quote "$project_dir/$plan_doc") --focus false; printf '\\nOpened $plan_doc. Shared context: $session_file\\n'; exec \"\${SHELL:-/bin/zsh}\" -l"
+    q_plan_path="$(shell_quote "$project_dir/$plan_doc")"
+    plan_command="for _ in 1 2 3 4 5 6 7 8 9 10; do [ -n \"\${CMUX_WORKSPACE_ID:-}\" ] && break; sleep 0.1; done; if [ -n \"\${CMUX_WORKSPACE_ID:-}\" ]; then cmux markdown open $q_plan_path --workspace \"\$CMUX_WORKSPACE_ID\" --direction right --focus false; printf '\\nOpened %s. Shared context: %s\\n' $(shell_quote "$plan_doc") $q_session_file; else printf '\\nOpen markdown manually: cmux markdown open %s --direction right --focus false\\nShared context: %s\\n' $q_plan_path $q_session_file; fi; exec \"\${SHELL:-/bin/zsh}\" -l"
   else
     plan_command="printf 'Shared context: %s\\n' $q_session_file; printf 'No plan doc configured.\\n'; exec \"\${SHELL:-/bin/zsh}\" -l"
   fi
