@@ -1,0 +1,33 @@
+{
+  "$schema": "https://raw.githubusercontent.com/manaflow-ai/cmux/main/web/data/cmux.schema.json",
+  "schemaVersion": 1,
+  "actions": {
+    "open-penny-cockpit": {
+      "type": "command",
+      "title": "Open Penny Cockpit",
+      "subtitle": "Launch Penny in cmux and Codex app",
+      "command": "bin/cmux-codex-launcher --profile penny",
+      "target": "newTabInCurrentPane",
+      "palette": true,
+      "icon": {
+        "type": "symbol",
+        "name": "square.stack.3d.up"
+      }
+    }
+  },
+  "commands": [
+    {
+      "name": "Launcher Dry Run",
+      "description": "Print the Penny launcher plan without opening cmux or Codex app.",
+      "keywords": ["launcher", "dry run", "penny"],
+      "command": "bin/cmux-codex-launcher --profile penny --dry-run"
+    },
+    {
+      "name": "Launcher Tests",
+      "description": "Run shell checks for the launcher.",
+      "keywords": ["test", "launcher"],
+      "command": "bash scripts/test-launcher.sh"
+    }
+  ]
+}
+

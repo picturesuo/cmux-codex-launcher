@@ -1,0 +1,448 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+LAUNCHER_HOME="${CMUX_CODEX_LAUNCHER_HOME:-$HOME/.config/cmux-codex-launcher}"
+STATE_DIR="$LAUNCHER_HOME/state"
+LAST_STATE="$STATE_DIR/last.env"
+
+PROFILE="${CMUX_CODEX_LAUNCHER_PROFILE:-penny}"
+PROJECT_OVERRIDE=""
+NAME_OVERRIDE=""
+WORKSPACE_OVERRIDE=""
+PREVIEW_OVERRIDE=""
+DEV_COMMAND_OVERRIDE=""
+DRY_RUN=0
+PRINT_LAYOUT=0
+OPEN_CODEX_APP_OVERRIDE=""
+CREATE_CMUX=1
+RESUME_LAST=0
+STATUS_LAST=0
+FOCUS_WORKSPACE="true"
+
+declare -a CML_EXTRA_DOCS=()
+declare -a CML_ROLE_NAMES=()
+
+usage() {
+  cat <<'EOF'
+Usage:
+  cmux-codex-launcher [--profile name] [--project /path/to/repo] [options]
+
+Options:
+  --profile <name>        Load profiles/<name>.env (default: penny)
+  --project <path>        Override the project path
+  --name <name>           Override the project name
+  --workspace-name <name> Override the cmux workspace name
+  --preview-url <url>     Override the browser preview URL
+  --dev-command <command> Override the dev-server terminal command
+  --app                   Open Codex desktop app (default unless profile disables it)
+  --no-app                Do not open Codex desktop app
+  --no-cmux               Do not create a cmux workspace
+  --dry-run               Print launch plan and layout without opening anything
+  --print-layout          Print only the cmux layout JSON
+  --resume-last           Use the last launched profile/project path
+  --status-last           Print the last launched profile/project path
+  --no-focus              Create cmux workspace without focusing it
+  -h, --help              Show help
+
+Examples:
+  bin/cmux-codex-launcher --profile penny
+  bin/cmux-codex-launcher --project /Users/me/Projects/app --name App
+  bin/cmux-codex-launcher --profile penny --dry-run
+EOF
+}
+
+die() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
+
+shell_quote() {
+  local value=${1:-}
+  value=${value//\'/\'\\\'\'}
+  printf "'%s'" "$value"
+}
+
+json_string() {
+  local value=${1:-}
+  value=${value//\\/\\\\}
+  value=${value//\"/\\\"}
+  value=${value//$'\n'/\\n}
+  value=${value//$'\r'/}
+  value=${value//$'\t'/\\t}
+  printf '"%s"' "$value"
+}
+
+slugify() {
+  local value=${1:-project}
+  value="$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-')"
+  value="${value#-}"
+  value="${value%-}"
+  [ -n "$value" ] || value="project"
+  printf '%s' "$value"
+}
+
+join_comma() {
+  local IFS=,
+  printf '%s' "$*"
+}
+
+profile_path_for() {
+  local name=$1
+  local user_path="$LAUNCHER_HOME/profiles/$name.env"
+  local repo_path="$REPO_DIR/profiles/$name.env"
+
+  if [ -f "$user_path" ]; then
+    printf '%s' "$user_path"
+    return 0
+  fi
+  if [ -f "$repo_path" ]; then
+    printf '%s' "$repo_path"
+    return 0
+  fi
+  return 1
+}
+
+role_key() {
+  printf '%s' "$1" | tr '[:lower:]- ' '[:upper:]__' | tr -cs 'A-Z0-9_' '_'
+}
+
+role_prompt_for() {
+  local role=$1
+  local key var_name value
+  key="$(role_key "$role")"
+  var_name="CML_ROLE_PROMPT_$key"
+  value="${!var_name:-}"
+  if [ -n "$value" ]; then
+    printf '%s' "$value"
+    return
+  fi
+
+  printf 'Read the target project instructions and docs first. You own the %s workstream. Keep scope narrow, report changed files and verification, and update the shared context file before handoff.' "$role"
+}
+
+existing_doc_list() {
+  local project_dir=$1
+  local doc
+  local -a docs=()
+
+  for doc in AGENTS.md README.md docs/knowledge.md docs/queue.md "$CML_PLAN_DOC"; do
+    [ -n "${doc:-}" ] || continue
+    [ -f "$project_dir/$doc" ] && docs+=("$doc")
+  done
+
+  if [ "${#CML_EXTRA_DOCS[@]}" -gt 0 ]; then
+    for doc in "${CML_EXTRA_DOCS[@]}"; do
+      [ -n "${doc:-}" ] || continue
+      [ -f "$project_dir/$doc" ] && docs+=("$doc")
+    done
+  fi
+
+  printf '%s\n' "${docs[@]}" | awk 'NF && !seen[$0]++'
+}
+
+create_shared_context() {
+  local project_name=$1
+  local project_dir=$2
+  local slug session_file
+  slug="$(slugify "$project_name")"
+  mkdir -p "$HOME/.codex/cmux-codex-launcher"
+  session_file="$HOME/.codex/cmux-codex-launcher/$slug-shared-context.md"
+
+  if [ ! -f "$session_file" ]; then
+    cat > "$session_file" <<EOF
+# cmux Codex shared context
+
+- Project name: $project_name
+- Project directory: $project_dir
+- Launcher: cmux-codex-launcher
+- State: initialized
+
+## Current Task
+
+- Goal: wait for the user to give the next task.
+- Scope: undefined until the user gives a task.
+- Status: ready.
+
+## Handoff Notes
+
+- Use this file for current task state and handoff notes.
+- Keep durable project knowledge in the target project's docs.
+- Do not duplicate secrets here.
+EOF
+  fi
+
+  printf '%s' "$session_file"
+}
+
+terminal_surface() {
+  local name=$1
+  local command=$2
+  printf '{"type":"terminal","name":%s,"command":%s}' \
+    "$(json_string "$name")" \
+    "$(json_string "$command")"
+}
+
+browser_surface() {
+  local name=$1
+  local url=$2
+  printf '{"type":"browser","name":%s,"url":%s}' \
+    "$(json_string "$name")" \
+    "$(json_string "$url")"
+}
+
+build_role_prompt() {
+  local role=$1
+  local project_name=$2
+  local project_dir=$3
+  local session_file=$4
+  local docs_text role_body
+
+  docs_text="$(existing_doc_list "$project_dir" | sed 's/^/- /')"
+  role_body="$(role_prompt_for "$role")"
+
+  cat <<EOF
+Shared launcher context:
+- Project name: $project_name
+- Project directory: $project_dir
+- Shared context file: $session_file
+- Role: $role
+
+Read first:
+$docs_text
+
+$role_body
+
+Workflow:
+- Use the shared context file for active task state.
+- Read target-project AGENTS.md before editing.
+- Keep write scope narrow and disjoint from other roles.
+- Report changed files, verification, risks, and next action.
+- Do not add broad product modes, connectors, or unrelated refactors unless the user asks.
+EOF
+}
+
+build_layout() {
+  local project_name=$1
+  local project_dir=$2
+  local session_file=$3
+  local plan_doc=${CML_PLAN_DOC:-}
+  local q_project_dir q_session_file q_model q_config q_sandbox q_approval
+  local plan_command role role_prompt role_command dev_command right_surface left_json right_json surfaces_json
+  local -a surfaces=()
+
+  q_project_dir="$(shell_quote "$project_dir")"
+  q_session_file="$(shell_quote "$session_file")"
+  q_model="$(shell_quote "$CML_CODEX_MODEL")"
+  q_config="$(shell_quote "model_reasoning_effort=\"$CML_CODEX_EFFORT\"")"
+  q_sandbox="$(shell_quote "$CML_SANDBOX")"
+  q_approval="$(shell_quote "$CML_APPROVAL")"
+
+  if [ -n "$plan_doc" ] && [ -f "$project_dir/$plan_doc" ]; then
+    plan_command="cmux markdown open $(shell_quote "$project_dir/$plan_doc") --focus false; printf '\\nOpened $plan_doc. Shared context: $session_file\\n'; exec \"\${SHELL:-/bin/zsh}\" -l"
+  else
+    plan_command="printf 'Shared context: %s\\n' $q_session_file; printf 'No plan doc configured.\\n'; exec \"\${SHELL:-/bin/zsh}\" -l"
+  fi
+  surfaces+=("$(terminal_surface "plan" "$plan_command")")
+
+  for role in "${CML_ROLE_NAMES[@]}"; do
+    role_prompt="$(build_role_prompt "$role" "$project_name" "$project_dir" "$session_file")"
+    role_command="codex -C $q_project_dir -m $q_model -c $q_config -s $q_sandbox -a $q_approval $(shell_quote "$role_prompt")"
+    surfaces+=("$(terminal_surface "$role" "$role_command")")
+  done
+
+  dev_command="${CML_DEV_COMMAND:-}"
+  if [ -n "$dev_command" ]; then
+    surfaces+=("$(terminal_surface "dev-server" "$dev_command")")
+  fi
+
+  surfaces_json="$(join_comma "${surfaces[@]}")"
+  left_json="{\"pane\":{\"surfaces\":[$surfaces_json]}}"
+
+  if [ -n "${CML_PREVIEW_URL:-}" ]; then
+    right_surface="$(browser_surface "preview" "$CML_PREVIEW_URL")"
+  else
+    right_surface="$(terminal_surface "notes" "printf 'No preview URL configured for $project_name.\\n'; exec \"\${SHELL:-/bin/zsh}\" -l")"
+  fi
+  right_json="{\"pane\":{\"surfaces\":[$right_surface]}}"
+
+  printf '{"direction":"horizontal","split":0.58,"children":[%s,%s]}' "$left_json" "$right_json"
+}
+
+load_last_state() {
+  [ -f "$LAST_STATE" ] || die "no last launch state at $LAST_STATE"
+  # shellcheck source=/dev/null
+  source "$LAST_STATE"
+  PROFILE="${CML_LAST_PROFILE:-$PROFILE}"
+  PROJECT_OVERRIDE="${CML_LAST_PROJECT_DIR:-$PROJECT_OVERRIDE}"
+}
+
+save_last_state() {
+  local project_dir=$1
+  mkdir -p "$STATE_DIR"
+  {
+    printf 'CML_LAST_PROFILE=%s\n' "$(shell_quote "$PROFILE")"
+    printf 'CML_LAST_PROJECT_DIR=%s\n' "$(shell_quote "$project_dir")"
+    printf 'CML_LAST_LAUNCHED_AT=%s\n' "$(shell_quote "$(date -u +%Y-%m-%dT%H:%M:%SZ)")"
+  } > "$LAST_STATE"
+}
+
+open_codex_app() {
+  local project_dir=$1
+  if command -v codex >/dev/null 2>&1; then
+    codex app "$project_dir" >/dev/null 2>&1 &
+    return 0
+  fi
+  open -a Codex "$project_dir" >/dev/null 2>&1 &
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --profile)
+      shift; [ "$#" -gt 0 ] || die "missing profile"
+      PROFILE="$1"
+      ;;
+    --project)
+      shift; [ "$#" -gt 0 ] || die "missing project path"
+      PROJECT_OVERRIDE="$1"
+      ;;
+    --name)
+      shift; [ "$#" -gt 0 ] || die "missing project name"
+      NAME_OVERRIDE="$1"
+      ;;
+    --workspace-name)
+      shift; [ "$#" -gt 0 ] || die "missing workspace name"
+      WORKSPACE_OVERRIDE="$1"
+      ;;
+    --preview-url)
+      shift; [ "$#" -gt 0 ] || die "missing preview URL"
+      PREVIEW_OVERRIDE="$1"
+      ;;
+    --dev-command)
+      shift; [ "$#" -gt 0 ] || die "missing dev command"
+      DEV_COMMAND_OVERRIDE="$1"
+      ;;
+    --app)
+      OPEN_CODEX_APP_OVERRIDE="true"
+      ;;
+    --no-app)
+      OPEN_CODEX_APP_OVERRIDE="false"
+      ;;
+    --no-cmux)
+      CREATE_CMUX=0
+      ;;
+    --dry-run)
+      DRY_RUN=1
+      ;;
+    --print-layout)
+      PRINT_LAYOUT=1
+      ;;
+    --resume-last)
+      RESUME_LAST=1
+      ;;
+    --status-last)
+      STATUS_LAST=1
+      ;;
+    --no-focus)
+      FOCUS_WORKSPACE="false"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      die "unknown argument: $1"
+      ;;
+  esac
+  shift
+done
+
+if [ "$STATUS_LAST" -eq 1 ]; then
+  if [ -f "$LAST_STATE" ]; then
+    cat "$LAST_STATE"
+  else
+    printf 'No last launch state at %s\n' "$LAST_STATE"
+  fi
+  exit 0
+fi
+
+if [ "$RESUME_LAST" -eq 1 ]; then
+  load_last_state
+fi
+
+PROFILE_PATH="$(profile_path_for "$PROFILE" || true)"
+[ -n "${PROFILE_PATH:-}" ] || die "profile not found: $PROFILE"
+# shellcheck source=/dev/null
+source "$PROFILE_PATH"
+
+CML_PROJECT_DIR="${PROJECT_OVERRIDE:-${CML_PROJECT_DIR:-$PWD}}"
+CML_PROJECT_NAME="${NAME_OVERRIDE:-${CML_PROJECT_NAME:-$(basename "$CML_PROJECT_DIR")}}"
+CML_WORKSPACE_NAME="${WORKSPACE_OVERRIDE:-${CML_WORKSPACE_NAME:-$CML_PROJECT_NAME}}"
+CML_WORKSPACE_DESCRIPTION="${CML_WORKSPACE_DESCRIPTION:-cmux Codex workspace for $CML_PROJECT_NAME}"
+CML_PREVIEW_URL="${PREVIEW_OVERRIDE:-${CML_PREVIEW_URL:-}}"
+CML_DEV_COMMAND="${DEV_COMMAND_OVERRIDE:-${CML_DEV_COMMAND:-}}"
+CML_PLAN_DOC="${CML_PLAN_DOC:-README.md}"
+CML_CODEX_MODEL="${CML_CODEX_MODEL:-gpt-5.5}"
+CML_CODEX_EFFORT="${CML_CODEX_EFFORT:-medium}"
+CML_SANDBOX="${CML_SANDBOX:-workspace-write}"
+CML_APPROVAL="${CML_APPROVAL:-on-request}"
+CML_OPEN_CODEX_APP="${OPEN_CODEX_APP_OVERRIDE:-${CML_OPEN_CODEX_APP:-true}}"
+
+if [ "${#CML_ROLE_NAMES[@]}" -eq 0 ]; then
+  CML_ROLE_NAMES=("lead" "build" "verify")
+fi
+
+CML_PROJECT_DIR="$(cd "$CML_PROJECT_DIR" && pwd)"
+[ -d "$CML_PROJECT_DIR" ] || die "project dir not found: $CML_PROJECT_DIR"
+
+SESSION_FILE="$(create_shared_context "$CML_PROJECT_NAME" "$CML_PROJECT_DIR")"
+LAYOUT_JSON="$(build_layout "$CML_PROJECT_NAME" "$CML_PROJECT_DIR" "$SESSION_FILE")"
+
+if [ "$PRINT_LAYOUT" -eq 1 ]; then
+  printf '%s\n' "$LAYOUT_JSON"
+  exit 0
+fi
+
+if [ "$DRY_RUN" -eq 1 ]; then
+  cat <<EOF
+profile: $PROFILE
+profile_path: $PROFILE_PATH
+project: $CML_PROJECT_NAME
+project_dir: $CML_PROJECT_DIR
+workspace: $CML_WORKSPACE_NAME
+codex_app: $CML_OPEN_CODEX_APP
+cmux_workspace: $CREATE_CMUX
+model: $CML_CODEX_MODEL
+effort: $CML_CODEX_EFFORT
+sandbox: $CML_SANDBOX
+approval: $CML_APPROVAL
+preview: ${CML_PREVIEW_URL:-none}
+dev_command: ${CML_DEV_COMMAND:-none}
+shared_context: $SESSION_FILE
+docs:
+$(existing_doc_list "$CML_PROJECT_DIR" | sed 's/^/  - /')
+roles:
+$(printf '%s\n' "${CML_ROLE_NAMES[@]}" | sed 's/^/  - /')
+layout:
+$LAYOUT_JSON
+EOF
+  exit 0
+fi
+
+save_last_state "$CML_PROJECT_DIR"
+
+if [ "$CML_OPEN_CODEX_APP" = "true" ]; then
+  open_codex_app "$CML_PROJECT_DIR"
+fi
+
+if [ "$CREATE_CMUX" -eq 1 ]; then
+  command -v cmux >/dev/null 2>&1 || die "cmux is not installed or not on PATH"
+  cmux new-workspace \
+    --name "$CML_WORKSPACE_NAME" \
+    --description "$CML_WORKSPACE_DESCRIPTION" \
+    --cwd "$CML_PROJECT_DIR" \
+    --layout "$LAYOUT_JSON" \
+    --focus "$FOCUS_WORKSPACE"
+fi
+
