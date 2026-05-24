@@ -26,11 +26,11 @@
         "name": "square.stack.3d.up"
       }
     },
-    "open-peter-toolbelt": {
+    "open-project-signals": {
       "type": "command",
-      "title": "Open Peter Toolbelt",
-      "subtitle": "Open CodexBar, RepoBar, ReleaseBar, summarize, and gitcrawl status",
-      "command": "cmux new-workspace --name 'Open Peter Toolbelt' --cwd '/Users/bensuo/Desktop/cmux-codex-launcher' --command 'CLOSE_TOOLBELT_LAUNCHER=true ./scripts/open-peter-toolbelt.sh' --focus true",
+      "title": "Open Project Signals",
+      "subtitle": "Open quota, repo health, source, and GitHub evidence tools",
+      "command": "cmux new-workspace --name 'Open Project Signals' --cwd '/Users/bensuo/Desktop/cmux-codex-launcher' --command 'CLOSE_SIGNALS_LAUNCHER=true ./scripts/open-project-signals.sh' --focus true",
       "target": "newTabInCurrentPane",
       "palette": true,
       "icon": {
@@ -52,8 +52,8 @@
           "title": "Open Penny Cockpit"
         },
         {
-          "action": "open-peter-toolbelt",
-          "title": "Open Peter Toolbelt"
+          "action": "open-project-signals",
+          "title": "Open Project Signals"
         },
         {
           "type": "separator"
@@ -89,10 +89,10 @@
       "command": "bash scripts/test-launcher.sh"
     },
     {
-      "name": "Peter Toolbelt Status",
-      "description": "Inspect the installed Peter-style usage, repo, summary, and GitHub cache tools.",
-      "keywords": ["peter", "toolbelt", "codexbar", "repobar", "gitcrawl", "summarize"],
-      "command": "scripts/peter-toolbelt-status.sh"
+      "name": "Project Signals Status",
+      "description": "Inspect quota, repo health, source summary, and GitHub cache tools.",
+      "keywords": ["signals", "peter", "toolbelt", "codexbar", "repobar", "gitcrawl", "summarize"],
+      "command": "scripts/project-signals-status.sh"
     }
   ]
 }

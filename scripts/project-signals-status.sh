@@ -9,6 +9,43 @@ have() {
   command -v "$1" >/dev/null 2>&1
 }
 
+section "What this is"
+cat <<'TEXT'
+Project Signals is optional. It is not another place to do coding work.
+
+Use it when you want to check the outside edge of a project:
+- Am I about to run out of Codex usage?
+- Is the repo healthy?
+- Are there public sources worth turning into Markdown?
+- Do GitHub issues/PRs need to become local evidence?
+
+The normal coding cockpit remains the launcher: choose a project, confirm the
+GitHub target, then work in the role workspace plus preview.
+TEXT
+
+section "What to use"
+cat <<'TEXT'
+Use now:
+- CodexBar: glanceable Codex usage and reset windows.
+- RepoBar: GitHub repo health after you choose repos to watch.
+- summarize --extract <url-or-file>: turn public sources into Markdown context.
+
+Use later:
+- ReleaseBar: release freshness once a project has real releases.
+- gitcrawl: local issue/PR cache after you explicitly choose repos to sync.
+
+Do not automate by default:
+- ClawSweeper-style issue/PR mutation. Keep it as a reference pattern only.
+TEXT
+
+section "Safety posture"
+cat <<'TEXT'
+Safe default: no tool here should mutate a repo or upload project files unless
+you explicitly run a command that does that. Prefer summarize --extract for
+public sources; use gitcrawl sync only for repos you are comfortable caching
+locally.
+TEXT
+
 section "Codex defaults"
 if [ -f "$HOME/.codex/config.toml" ]; then
   rg -n '^(model|model_reasoning_effort|plan_mode_reasoning_effort)' "$HOME/.codex/config.toml" 2>/dev/null || true
@@ -78,4 +115,4 @@ fi
 section "Web dashboards"
 printf 'ReleaseBar: https://release.bar/picturesuo\n'
 printf 'RepoBar: https://repobar.app/\n'
-printf 'ClawSweeper Live: https://clawsweeper.openclaw.ai/\n'
+printf 'ClawSweeper Live reference: https://clawsweeper.openclaw.ai/\n'

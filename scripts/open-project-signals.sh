@@ -8,7 +8,7 @@ open -ga "CodexBar" >/dev/null 2>&1 || true
 open -ga "RepoBar" >/dev/null 2>&1 || true
 
 cmux new-workspace \
-  --name "Peter Toolbelt" \
+  --name "Project Signals" \
   --cwd "$ROOT" \
   --layout "$(cat <<'JSON'
 {
@@ -20,8 +20,8 @@ cmux new-workspace \
         "surfaces": [
           {
             "type": "terminal",
-            "name": "toolbelt-status",
-            "command": "./scripts/peter-toolbelt-status.sh; exec \"${SHELL:-/bin/zsh}\" -l"
+            "name": "signals-guide",
+            "command": "./scripts/project-signals-status.sh; exec \"${SHELL:-/bin/zsh}\" -l"
           }
         ]
       }
@@ -38,11 +38,6 @@ cmux new-workspace \
             "type": "browser",
             "name": "repobar",
             "url": "https://repobar.app/"
-          },
-          {
-            "type": "browser",
-            "name": "clawsweeper",
-            "url": "https://clawsweeper.openclaw.ai/"
           }
         ]
       }
@@ -53,6 +48,6 @@ JSON
 )" \
   --focus true
 
-if [ "${CLOSE_TOOLBELT_LAUNCHER:-false}" = "true" ] && [ -n "$LAUNCHER_WORKSPACE" ]; then
+if [ "${CLOSE_SIGNALS_LAUNCHER:-false}" = "true" ] && [ -n "$LAUNCHER_WORKSPACE" ]; then
   cmux close-workspace --workspace "$LAUNCHER_WORKSPACE" >/dev/null 2>&1 || true
 fi

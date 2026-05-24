@@ -36,7 +36,7 @@ read_when:
 - `repo`: The plan tab does not auto-run `cmux markdown open`; run the printed command after launch to avoid workspace recursion during startup.
 - `repo`: Project-local cmux actions live in `.cmux/cmux.json`.
 - `repo`: Global cmux launcher action lives in `~/.config/cmux/cmux.json` and points at `--choose`.
-- `repo`: The Peter Toolbelt cmux action opens CodexBar, RepoBar, and a status workspace for ReleaseBar, RepoBar, ClawSweeper, summarize, and gitcrawl.
+- `repo`: The Project Signals cmux action opens CodexBar, RepoBar, and a status workspace for ReleaseBar, RepoBar, summarize, and gitcrawl.
 - `repo`: User wrapper `/Users/bensuo/codex-launchpad.sh` delegates no-argument launches to `--choose`.
 - `repo`: `CMUX_CODEX_SEARCH_ROOTS` overrides local fuzzy search roots.
 - `repo`: `CMUX_CODEX_PROJECTS_DIR` overrides where GitHub-only matches are cloned.
@@ -65,7 +65,7 @@ read_when:
 - `external`: cmux project configs use `.cmux/cmux.json` for local actions, commands, and layouts.
 - `external`: cmux supports `new-workspace --layout` for scripted split layouts.
 - `external`: Codex CLI supports `codex app <path>` on macOS to open Codex Desktop on a workspace path.
-- `external`: RepoBar and CodexBar should run as menu bar apps; summarize and gitcrawl are local CLI tools; ReleaseBar and ClawSweeper are reference browser surfaces.
+- `external`: RepoBar and CodexBar should run as menu bar apps; summarize and gitcrawl are local CLI tools; ReleaseBar is a reference browser surface; ClawSweeper is documented but not opened by default.
 - `external`: Karpathy's `autoresearch` treats Markdown as the human-written program for agents, with explicit editable files, fixed evaluation, and keep/discard loops.
 - `external`: Steinberger's `agent-scripts` keeps AGENTS guidance terse, routing-heavy, and focused on hard rules; this launcher adapts that style but uses auto commit/push by default.
 

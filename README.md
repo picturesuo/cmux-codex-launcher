@@ -17,7 +17,7 @@ profiles, deterministic defaults, and cmux workspace layouts.
 bin/cmux-codex-launcher --choose
 bin/cmux-codex-launcher --choose --query penny --dry-run
 bin/cmux-codex-launcher --profile penny
-scripts/open-peter-toolbelt.sh
+scripts/open-project-signals.sh
 ```
 
 Install a local command:
@@ -32,8 +32,8 @@ uses `--choose`, which asks what project, file, app, folder, or GitHub repo you
 are working on and which GitHub repo the work should contribute to.
 
 The cmux Command Palette and plus-button context menu also include
-`Open Peter Toolbelt`. It starts CodexBar and RepoBar, then opens a small cmux
-workspace with local status on the left and ReleaseBar, RepoBar, and ClawSweeper
+`Open Project Signals`. It starts CodexBar and RepoBar, then opens a small cmux
+workspace with a plain-language guide on the left and ReleaseBar/RepoBar
 reference surfaces on the right.
 
 ## One-Click Chooser
@@ -137,5 +137,5 @@ See [docs/launcher-design.md](docs/launcher-design.md) and
 [docs/cmux-cockpit-loadout.md](docs/cmux-cockpit-loadout.md) for the design
 notes, success criteria, and external references. See
 [docs/codex-terminal-profile.md](docs/codex-terminal-profile.md) for the
-reasoning-effort defaults and [docs/peter-toolbelt.md](docs/peter-toolbelt.md)
-for the Peter-style toolbelt.
+reasoning-effort defaults and [docs/project-signals.md](docs/project-signals.md)
+for the optional project-signal tools.

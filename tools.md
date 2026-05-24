@@ -132,11 +132,11 @@ cmux config validate
 cmux reload-config
 ```
 
-### Peter toolbelt
+### Project signals
 
 ```bash
-scripts/peter-toolbelt-status.sh
-scripts/open-peter-toolbelt.sh
+scripts/project-signals-status.sh
+scripts/open-project-signals.sh
 open -ga CodexBar
 open -ga RepoBar
 codexbar usage --provider codex --status --no-color
@@ -144,9 +144,9 @@ summarize --extract https://repobar.app/
 gitcrawl doctor
 ```
 
-Expected posture: CodexBar and RepoBar are macOS menu bar apps; ReleaseBar and
-ClawSweeper stay browser/reference surfaces; summarize and gitcrawl are local
-CLI tools.
+Expected posture: CodexBar and RepoBar are macOS menu bar apps; ReleaseBar is a
+browser/reference surface; ClawSweeper stays a documented reference only;
+summarize and gitcrawl are local CLI tools.
 
 ### `cmux markdown open`
 

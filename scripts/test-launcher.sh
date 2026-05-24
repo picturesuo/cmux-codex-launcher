@@ -7,8 +7,8 @@ bash -n "$ROOT/bin/cmux-codex-launcher"
 bash -n "$ROOT/scripts/cmux-launcher-entry.sh"
 bash -n "$ROOT/scripts/install-local.sh"
 bash -n "$ROOT/scripts/doctor.sh"
-bash -n "$ROOT/scripts/open-peter-toolbelt.sh"
-bash -n "$ROOT/scripts/peter-toolbelt-status.sh"
+bash -n "$ROOT/scripts/open-project-signals.sh"
+bash -n "$ROOT/scripts/project-signals-status.sh"
 
 layout="$("$ROOT/bin/cmux-codex-launcher" --profile penny --print-layout)"
 
@@ -75,8 +75,8 @@ case "$cmux_config" in
 esac
 
 case "$cmux_config" in
-  *'"open-peter-toolbelt"'*'"command":'*'CLOSE_TOOLBELT_LAUNCHER=true ./scripts/open-peter-toolbelt.sh'* ) ;;
-  * ) printf 'cmux config is not wired to the Peter Toolbelt action\n' >&2; exit 1 ;;
+  *'"open-project-signals"'*'"command":'*'CLOSE_SIGNALS_LAUNCHER=true ./scripts/open-project-signals.sh'* ) ;;
+  * ) printf 'cmux config is not wired to the Project Signals action\n' >&2; exit 1 ;;
 esac
 
 case "$cmux_config" in

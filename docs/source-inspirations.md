@@ -80,9 +80,10 @@ Launcher adaptation:
 - Shared context captures current task state instead of bloating prompts.
 - Launcher profiles set Codex terminal reasoning to `medium` and Plan mode to
   `high`.
-- RepoBar and CodexBar belong in the menu bar; ReleaseBar, RepoBar, and
-  ClawSweeper belong in a separate toolbelt workspace; summarize and gitcrawl
-  feed Markdown/evidence into the real work.
+- RepoBar and CodexBar belong in the menu bar; ReleaseBar and RepoBar belong in
+  a separate Project Signals workspace; summarize and gitcrawl feed
+  Markdown/evidence into the real work. ClawSweeper remains a reference pattern,
+  not a default surface.
 
 ## Simon Willison Parallel Agents
 
