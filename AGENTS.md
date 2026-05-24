@@ -15,6 +15,7 @@ preview/log surfaces, shared context, and a clear ship path.
 - `docs/launcher-design.md`: architecture and external references.
 - `docs/cmux-cockpit-loadout.md`: one-click cmux loadout and success criteria.
 - `docs/codex-terminal-profile.md`: Codex reasoning defaults and when to use medium, high, or xhigh.
+- `docs/peter-toolbelt.md`: Peter-style RepoBar, CodexBar, summarize, gitcrawl, and dashboard integration.
 - `docs/agent-workflow.md`: launch loop, handoff, and shipping behavior.
 - `docs/knowledge.md`: stable repo facts and user preferences.
 - `docs/agentic-workflow-research.md`: sourced workflow research and success criteria.

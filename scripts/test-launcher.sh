@@ -7,6 +7,8 @@ bash -n "$ROOT/bin/cmux-codex-launcher"
 bash -n "$ROOT/scripts/cmux-launcher-entry.sh"
 bash -n "$ROOT/scripts/install-local.sh"
 bash -n "$ROOT/scripts/doctor.sh"
+bash -n "$ROOT/scripts/open-peter-toolbelt.sh"
+bash -n "$ROOT/scripts/peter-toolbelt-status.sh"
 
 layout="$("$ROOT/bin/cmux-codex-launcher" --profile penny --print-layout)"
 
@@ -70,6 +72,11 @@ cmux_config="$(cat "$ROOT/.cmux/cmux.json")"
 case "$cmux_config" in
   *'"choose-codex-cockpit"'*'"type": "command"'*'"command":'*'./scripts/cmux-launcher-entry.sh --choose'*'"target": "newTabInCurrentPane"'* ) ;;
   * ) printf 'cmux plus action is not wired to the temporary picker workspace\n' >&2; exit 1 ;;
+esac
+
+case "$cmux_config" in
+  *'"open-peter-toolbelt"'*'"command":'*'CLOSE_TOOLBELT_LAUNCHER=true ./scripts/open-peter-toolbelt.sh'* ) ;;
+  * ) printf 'cmux config is not wired to the Peter Toolbelt action\n' >&2; exit 1 ;;
 esac
 
 case "$cmux_config" in

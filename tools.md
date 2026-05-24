@@ -132,6 +132,22 @@ cmux config validate
 cmux reload-config
 ```
 
+### Peter toolbelt
+
+```bash
+scripts/peter-toolbelt-status.sh
+scripts/open-peter-toolbelt.sh
+open -ga CodexBar
+open -ga RepoBar
+codexbar usage --provider codex --status --no-color
+summarize --extract https://repobar.app/
+gitcrawl doctor
+```
+
+Expected posture: CodexBar and RepoBar are macOS menu bar apps; ReleaseBar and
+ClawSweeper stay browser/reference surfaces; summarize and gitcrawl are local
+CLI tools.
+
 ### `cmux markdown open`
 
 - Purpose: open a markdown file as a formatted live panel.
