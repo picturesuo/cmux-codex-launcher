@@ -56,6 +56,7 @@ Sources:
 
 - https://steipete.me/posts/just-talk-to-it
 - https://github.com/steipete/agent-scripts/blob/main/AGENTS.MD
+- https://www.skills.sh/steipete/clawdis/tmux
 - https://websearchapi.ai/blog/openclaw-state-of-the-claw-peter-steinberger
 
 Useful details:
@@ -69,6 +70,8 @@ Useful details:
 - Use persistent CLI sessions for long-running servers, logs, tests, and agent
   work.
 - Prefer CLIs such as `gh` when they avoid MCP context overhead.
+- Peter's published tmux skill treats tmux as the control layer for monitoring
+  Codex/Claude sessions, sending input, and scraping recent pane output.
 - Ask for tests after feature/fix work when behavior is not purely visual.
 - Keep human review in the loop; do not run a dark factory that merges without
   taste or review.
@@ -79,6 +82,9 @@ Launcher implication:
   server, preview surface, shared context, and commit/push hygiene.
 - The launcher should avoid overbuilt orchestration. It should set up the right
   panes and let the user talk directly to Codex.
+- cmux should preserve the useful tmux pattern: persistent visible sessions,
+  direct CLI control, and readable pane output, but with project/GitHub routing
+  handled by the one-click launcher.
 - The `ship` role is first-class because clean commits and pushes are part of
   the workflow, not an afterthought.
 
