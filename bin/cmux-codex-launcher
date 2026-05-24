@@ -13,6 +13,8 @@ NAME_OVERRIDE=""
 WORKSPACE_OVERRIDE=""
 PREVIEW_OVERRIDE=""
 DEV_COMMAND_OVERRIDE=""
+PICKER_QUERY=""
+GITHUB_OVERRIDE=""
 DRY_RUN=0
 PRINT_LAYOUT=0
 OPEN_CODEX_APP_OVERRIDE=""
@@ -21,6 +23,8 @@ CREATE_CMUX=1
 RESUME_LAST=0
 STATUS_LAST=0
 FOCUS_WORKSPACE="true"
+INTERACTIVE_PICKER=0
+CLONE_MISSING_GITHUB=1
 
 declare -a CML_EXTRA_DOCS=()
 declare -a CML_ROLE_NAMES=()
@@ -37,6 +41,10 @@ Options:
   --workspace-name <name> Override the cmux workspace name
   --preview-url <url>     Override the browser preview URL
   --dev-command <command> Override the dev-server terminal command
+  --choose                Ask for a file/app/repo and GitHub target, then launch
+  --query <text>          Seed --choose search; selects the best match without a TTY
+  --github <repo|url>     Override the GitHub repo for --choose
+  --no-clone              Do not clone a GitHub-only match
   --app                   Open Codex desktop app (default unless profile disables it)
   --no-app                Do not open Codex desktop app
   --autostart-roles       Send each role prompt immediately to Codex CLI
@@ -52,6 +60,7 @@ Options:
 Examples:
   bin/cmux-codex-launcher --profile penny
   bin/cmux-codex-launcher --project /Users/me/Projects/app --name App
+  bin/cmux-codex-launcher --choose
   bin/cmux-codex-launcher --profile penny --dry-run
 EOF
 }
@@ -86,6 +95,10 @@ slugify() {
   printf '%s' "$value"
 }
 
+strip_tabs() {
+  printf '%s' "${1:-}" | tr '\t\r\n' '   ' | sed 's/  */ /g; s/^ //; s/ $//'
+}
+
 join_comma() {
   local IFS=,
   printf '%s' "$*"
@@ -109,6 +122,58 @@ profile_path_for() {
 
 role_key() {
   printf '%s' "$1" | tr '[:lower:]- ' '[:upper:]__' | tr -cs 'A-Z0-9_' '_'
+}
+
+normalize_github_repo_ref() {
+  local value=${1:-}
+  local ref
+
+  case "$value" in
+    git@github.com:*)
+      ref="${value#git@github.com:}"
+      ;;
+    ssh://git@github.com/*)
+      ref="${value#ssh://git@github.com/}"
+      ;;
+    https://github.com/*)
+      ref="${value#https://github.com/}"
+      ;;
+    http://github.com/*)
+      ref="${value#http://github.com/}"
+      ;;
+    github.com/*)
+      ref="${value#github.com/}"
+      ;;
+    */*)
+      ref="$value"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  ref="${ref%.git}"
+  ref="${ref%%#*}"
+  ref="${ref%%\?*}"
+  ref="${ref%/}"
+  [ -n "$ref" ] || return 1
+  printf '%s' "$ref"
+}
+
+github_ssh_url() {
+  local ref=$1
+  printf 'git@github.com:%s.git' "$ref"
+}
+
+git_origin_ref_for() {
+  local project_dir=$1
+  local remote ref
+
+  remote="$(git -C "$project_dir" remote get-url origin 2>/dev/null || true)"
+  [ -n "$remote" ] || return 1
+  ref="$(normalize_github_repo_ref "$remote" 2>/dev/null || true)"
+  [ -n "$ref" ] || return 1
+  printf '%s' "$ref"
 }
 
 role_prompt_for() {
@@ -179,6 +244,59 @@ EOF
   printf '%s' "$session_file"
 }
 
+update_shared_context_selection() {
+  local session_file=$1
+  local project_name=$2
+  local project_dir=$3
+  local tmp
+
+  tmp="$(mktemp -t cmux-codex-context.XXXXXX)"
+  if [ -f "$session_file" ] && grep -q '<!-- launcher-selection:start -->' "$session_file"; then
+    awk \
+      -v project_name="$project_name" \
+      -v project_dir="$project_dir" \
+      -v selected_target="${CML_SELECTED_TARGET:-unspecified}" \
+      -v github_repo="${CML_GITHUB_REPO:-use target repo origin}" \
+      -v updated_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+      '
+      /<!-- launcher-selection:start -->/ {
+        print "<!-- launcher-selection:start -->"
+        print "## Launcher Selection"
+        print ""
+        print "- Project name: " project_name
+        print "- Project directory: " project_dir
+        print "- Selected target: " selected_target
+        print "- GitHub contribution target: " github_repo
+        print "- Updated at: " updated_at
+        print "<!-- launcher-selection:end -->"
+        skip=1
+        next
+      }
+      /<!-- launcher-selection:end -->/ {
+        skip=0
+        next
+      }
+      !skip { print }
+    ' "$session_file" > "$tmp"
+    mv "$tmp" "$session_file"
+  else
+    cat "$session_file" > "$tmp"
+    cat >> "$tmp" <<EOF
+
+<!-- launcher-selection:start -->
+## Launcher Selection
+
+- Project name: $project_name
+- Project directory: $project_dir
+- Selected target: ${CML_SELECTED_TARGET:-unspecified}
+- GitHub contribution target: ${CML_GITHUB_REPO:-use target repo origin}
+- Updated at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+<!-- launcher-selection:end -->
+EOF
+    mv "$tmp" "$session_file"
+  fi
+}
+
 terminal_surface() {
   local name=$1
   local command=$2
@@ -200,10 +318,12 @@ build_role_prompt() {
   local project_name=$2
   local project_dir=$3
   local session_file=$4
-  local docs_text role_body
+  local docs_text role_body selected_target github_repo
 
   docs_text="$(existing_doc_list "$project_dir" | sed 's/^/- /')"
   role_body="$(role_prompt_for "$role")"
+  selected_target="${CML_SELECTED_TARGET:-}"
+  github_repo="${CML_GITHUB_REPO:-}"
 
   cat <<EOF
 Shared launcher context:
@@ -211,6 +331,8 @@ Shared launcher context:
 - Project directory: $project_dir
 - Shared context file: $session_file
 - Role: $role
+- Selected target: ${selected_target:-unspecified}
+- GitHub contribution target: ${github_repo:-use target repo origin}
 
 Read first:
 $docs_text
@@ -220,11 +342,511 @@ $role_body
 Workflow:
 - Use the shared context file for active task state.
 - Read target-project AGENTS.md before editing.
+- Confirm git status and origin before making repo-visible changes.
 - Keep write scope narrow and disjoint from other roles.
 - Report changed files, verification, risks, and next action.
+- Ship completed work according to the target repo instructions, including commit/push rules.
 - Do not add broad product modes, connectors, or unrelated refactors unless the user asks.
 - Do not run cmux-codex-launcher or create another cmux workspace unless the user explicitly asks.
 EOF
+}
+
+is_tty() {
+  [ -t 0 ] && [ -t 1 ]
+}
+
+prompt_value() {
+  local prompt=$1
+  local default=${2:-}
+  local value
+
+  if ! is_tty; then
+    printf '%s' "$default"
+    return
+  fi
+
+  if [ -n "$default" ]; then
+    printf '%s [%s]: ' "$prompt" "$default" >&2
+  else
+    printf '%s: ' "$prompt" >&2
+  fi
+  IFS= read -r value
+  printf '%s' "${value:-$default}"
+}
+
+search_roots() {
+  local roots=${CMUX_CODEX_SEARCH_ROOTS:-"$HOME/Desktop:$HOME/Projects:$HOME/src:$HOME/code"}
+  local old_ifs=$IFS
+  local root
+
+  IFS=:
+  for root in $roots; do
+    IFS=$old_ifs
+    [ -n "$root" ] || continue
+    case "$root" in
+      "~"*) root="$HOME${root#~}" ;;
+    esac
+    [ -d "$root" ] && printf '%s\n' "$root"
+    IFS=:
+  done
+  IFS=$old_ifs
+}
+
+score_candidate() {
+  local query=$1
+  local haystack=$2
+  local query_lower haystack_lower word clean score
+
+  query_lower="$(printf '%s' "$query" | tr '[:upper:]' '[:lower:]')"
+  haystack_lower="$(printf '%s' "$haystack" | tr '[:upper:]' '[:lower:]')"
+  score=0
+
+  for word in $query_lower; do
+    clean="$(printf '%s' "$word" | tr -cd '[:alnum:]_.-/')"
+    [ -n "$clean" ] || continue
+    case "$haystack_lower" in
+      *"$clean"*) score=$((score + ${#clean} + 20)) ;;
+      *) score=$((score - 8)) ;;
+    esac
+  done
+
+  case "$haystack_lower" in
+    "$query_lower"|*"/$query_lower"|*":$query_lower") score=$((score + 80)) ;;
+  esac
+
+  printf '%s' "$score"
+}
+
+candidate_line() {
+  local score=$1
+  local kind=$2
+  local label=$3
+  local path=$4
+  local repo=${5:-}
+  local url=${6:-}
+
+  printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
+    "$score" \
+    "$(strip_tabs "$kind")" \
+    "$(strip_tabs "$label")" \
+    "$(strip_tabs "$path")" \
+    "$(strip_tabs "$repo")" \
+    "$(strip_tabs "$url")"
+}
+
+emit_local_repo_candidates() {
+  local query=$1
+  local root git_marker repo_dir label remote repo_ref score haystack
+  local query_lower label_lower
+  local depth=${CMUX_CODEX_SEARCH_DEPTH:-5}
+
+  query_lower="$(printf '%s' "$query" | tr '[:upper:]' '[:lower:]')"
+
+  search_roots | while IFS= read -r root; do
+    find "$root" -maxdepth "$depth" \
+      \( -name node_modules -o -name .Trash -o -name .cache -o -name Library -o -name .next -o -name dist -o -name build \) -prune \
+      -o -name .git -print 2>/dev/null
+  done | while IFS= read -r git_marker; do
+    repo_dir="$(dirname "$git_marker")"
+    [ -d "$repo_dir" ] || continue
+    label="$(basename "$repo_dir")"
+    remote="$(git -C "$repo_dir" remote get-url origin 2>/dev/null || true)"
+    repo_ref="$(normalize_github_repo_ref "$remote" 2>/dev/null || true)"
+    haystack="$label $repo_dir $repo_ref $remote"
+    score="$(score_candidate "$query" "$haystack")"
+    label_lower="$(printf '%s' "$label" | tr '[:upper:]' '[:lower:]')"
+    if [ "$label_lower" = "$query_lower" ]; then
+      score=$((score + 160))
+    fi
+    [ "$score" -gt 0 ] || continue
+    candidate_line "$score" "local-repo" "$label" "$repo_dir" "$repo_ref" "$remote"
+  done
+}
+
+emit_file_candidates() {
+  local query=$1
+  local first root file project_dir repo_ref rel score haystack
+  local depth=${CMUX_CODEX_FILE_SEARCH_DEPTH:-6}
+
+  first="$(printf '%s' "$query" | awk '{print $1}')"
+  first="$(printf '%s' "$first" | tr -cd '[:alnum:]_.-')"
+  [ -n "$first" ] || return 0
+
+  search_roots | while IFS= read -r root; do
+    find "$root" -maxdepth "$depth" \
+      \( -name node_modules -o -name .git -o -name .Trash -o -name .cache -o -name Library -o -name .next -o -name dist -o -name build \) -prune \
+      -o -type f -iname "*$first*" -print 2>/dev/null | head -n 20
+  done | while IFS= read -r file; do
+    project_dir="$(git -C "$(dirname "$file")" rev-parse --show-toplevel 2>/dev/null || dirname "$file")"
+    repo_ref="$(git_origin_ref_for "$project_dir" 2>/dev/null || true)"
+    rel="${file#$project_dir/}"
+    haystack="$rel $file $project_dir $repo_ref"
+    score="$(score_candidate "$query" "$haystack")"
+    score=$((score - 20))
+    [ "$score" -gt 0 ] || continue
+    candidate_line "$score" "file" "$rel" "$file" "$repo_ref" "$project_dir"
+  done
+}
+
+emit_github_candidates() {
+  local query=$1
+  local limit=${CMUX_CODEX_GITHUB_LIMIT:-200}
+  local owner repo_ref url ssh_url description score haystack
+  local query_lower repo_name_lower
+
+  query_lower="$(printf '%s' "$query" | tr '[:upper:]' '[:lower:]')"
+
+  command -v gh >/dev/null 2>&1 || return 0
+  owner="$(gh api user --jq .login 2>/dev/null || true)"
+  [ -n "$owner" ] || return 0
+
+  gh repo list "$owner" --limit "$limit" --json nameWithOwner,url,sshUrl,description \
+    --jq '.[] | [.nameWithOwner,.url,.sshUrl,(.description // "")] | @tsv' 2>/dev/null |
+    while IFS=$'\t' read -r repo_ref url ssh_url description; do
+      haystack="$repo_ref $url $description"
+      score="$(score_candidate "$query" "$haystack")"
+      repo_name_lower="$(printf '%s' "${repo_ref##*/}" | tr '[:upper:]' '[:lower:]')"
+      if [ "$repo_name_lower" = "$query_lower" ]; then
+        score=$((score + 120))
+      fi
+      [ "$score" -gt 0 ] || continue
+      candidate_line "$score" "github-repo" "$repo_ref" "$repo_ref" "$repo_ref" "${ssh_url:-$url}"
+    done
+}
+
+collect_candidates() {
+  local query=$1
+  {
+    emit_local_repo_candidates "$query"
+    emit_file_candidates "$query"
+    emit_github_candidates "$query"
+  } | awk -F '\t' '!seen[$2 "\t" $4 "\t" $5]++' | sort -rn
+}
+
+direct_path_candidate() {
+  local query=$1
+  local path=$query
+  local project_dir repo_ref label
+
+  case "$path" in
+    "~"*) path="$HOME${path#~}" ;;
+  esac
+  [ -e "$path" ] || return 1
+
+  if [ -d "$path" ]; then
+    project_dir="$(git -C "$path" rev-parse --show-toplevel 2>/dev/null || cd "$path" && pwd)"
+    label="$(basename "$project_dir")"
+    repo_ref="$(git_origin_ref_for "$project_dir" 2>/dev/null || true)"
+    candidate_line 200 "local-repo" "$label" "$project_dir" "$repo_ref" "$project_dir"
+  else
+    project_dir="$(git -C "$(dirname "$path")" rev-parse --show-toplevel 2>/dev/null || dirname "$path")"
+    repo_ref="$(git_origin_ref_for "$project_dir" 2>/dev/null || true)"
+    candidate_line 200 "file" "${path#$project_dir/}" "$path" "$repo_ref" "$project_dir"
+  fi
+}
+
+choose_candidate() {
+  local query=$1
+  local candidates_file=$2
+  local choice max line score kind label path repo url index
+
+  if ! is_tty; then
+    sed -n '1p' "$candidates_file"
+    return
+  fi
+
+  printf '\nMatches for "%s":\n' "$query" >&2
+  index=1
+  while IFS=$'\t' read -r score kind label path repo url; do
+    [ "$index" -le 8 ] || break
+    printf '  %s) %s  %s' "$index" "$kind" "$label" >&2
+    [ -n "$repo" ] && printf '  [%s]' "$repo" >&2
+    printf '\n      %s\n' "$path" >&2
+    index=$((index + 1))
+  done < "$candidates_file"
+  max=$((index - 1))
+  [ "$max" -gt 0 ] || return 1
+
+  choice="$(prompt_value "Choose a match" "1")"
+  case "$choice" in
+    ''|*[!0-9]*) choice=1 ;;
+  esac
+  [ "$choice" -ge 1 ] && [ "$choice" -le "$max" ] || choice=1
+  sed -n "${choice}p" "$candidates_file"
+}
+
+local_project_for_github_ref() {
+  local target_ref=$1
+  local root git_marker repo_dir repo_ref
+  local depth=${CMUX_CODEX_SEARCH_DEPTH:-5}
+
+  search_roots | while IFS= read -r root; do
+    find "$root" -maxdepth "$depth" \
+      \( -name node_modules -o -name .Trash -o -name .cache -o -name Library -o -name .next -o -name dist -o -name build \) -prune \
+      -o -name .git -print 2>/dev/null
+  done | while IFS= read -r git_marker; do
+    repo_dir="$(dirname "$git_marker")"
+    repo_ref="$(git_origin_ref_for "$repo_dir" 2>/dev/null || true)"
+    if [ "$repo_ref" = "$target_ref" ]; then
+      printf '%s\n' "$repo_dir"
+      return 0
+    fi
+  done | sed -n '1p'
+}
+
+clone_or_resolve_github_repo() {
+  local repo_ref=$1
+  local existing clone_root dest
+
+  existing="$(local_project_for_github_ref "$repo_ref")"
+  if [ -n "$existing" ]; then
+    printf '%s' "$existing"
+    return 0
+  fi
+
+  clone_root="${CMUX_CODEX_PROJECTS_DIR:-$HOME/Desktop}"
+  dest="$clone_root/$(basename "$repo_ref")"
+  if [ -d "$dest" ]; then
+    printf '%s' "$dest"
+    return 0
+  fi
+
+  if [ "$CLONE_MISSING_GITHUB" -ne 1 ]; then
+    die "GitHub repo is not cloned locally: $repo_ref"
+  fi
+  if [ "$DRY_RUN" -eq 1 ]; then
+    die "GitHub repo is not cloned locally: $repo_ref (dry run will not clone)"
+  fi
+
+  command -v gh >/dev/null 2>&1 || die "gh is required to clone $repo_ref"
+  mkdir -p "$clone_root"
+  gh repo clone "$repo_ref" "$dest"
+  printf '%s' "$dest"
+}
+
+profile_for_project_dir() {
+  local project_dir=$1
+  local profile_dir path name resolved_dir
+
+  for profile_dir in "$LAUNCHER_HOME/profiles" "$REPO_DIR/profiles"; do
+    [ -d "$profile_dir" ] || continue
+    for path in "$profile_dir"/*.env; do
+      [ -f "$path" ] || continue
+      resolved_dir="$(CML_PROJECT_DIR=; source "$path"; [ -n "${CML_PROJECT_DIR:-}" ] && cd "$CML_PROJECT_DIR" 2>/dev/null && pwd || true)"
+      if [ "$resolved_dir" = "$project_dir" ]; then
+        name="$(basename "$path" .env)"
+        printf '%s\t%s' "$name" "$path"
+        return 0
+      fi
+    done
+  done
+  return 1
+}
+
+infer_package_manager() {
+  local project_dir=$1
+  if [ -f "$project_dir/pnpm-lock.yaml" ]; then
+    printf 'pnpm'
+  elif [ -f "$project_dir/bun.lockb" ] || [ -f "$project_dir/bun.lock" ]; then
+    printf 'bun'
+  elif [ -f "$project_dir/yarn.lock" ]; then
+    printf 'yarn'
+  else
+    printf 'npm'
+  fi
+}
+
+package_has_script() {
+  local project_dir=$1
+  local script=$2
+  [ -f "$project_dir/package.json" ] || return 1
+  command -v node >/dev/null 2>&1 || return 1
+  node -e "const p=require(process.argv[1]); process.exit(p.scripts && p.scripts[process.argv[2]] ? 0 : 1)" "$project_dir/package.json" "$script" >/dev/null 2>&1
+}
+
+script_command_for() {
+  local project_dir=$1
+  local script=$2
+  local manager
+
+  manager="$(infer_package_manager "$project_dir")"
+  case "$manager" in
+    npm) printf 'npm run %s' "$script" ;;
+    yarn) printf 'yarn %s' "$script" ;;
+    bun) printf 'bun run %s' "$script" ;;
+    *) printf '%s %s' "$manager" "$script" ;;
+  esac
+}
+
+infer_dev_command() {
+  local project_dir=$1
+  local command
+
+  if package_has_script "$project_dir" dev; then
+    command="$(script_command_for "$project_dir" dev)"
+    printf 'if lsof -nP -iTCP:3000 -sTCP:LISTEN >/dev/null 2>&1; then printf "Dev server may already be running at http://localhost:3000\\n"; exec "${SHELL:-/bin/zsh}" -l; fi; %s' "$command"
+  elif [ -f "$project_dir/pyproject.toml" ] || [ -f "$project_dir/requirements.txt" ]; then
+    printf 'printf "Python project detected. Start the app-specific dev server here after reading the README.\\n"; exec "${SHELL:-/bin/zsh}" -l'
+  else
+    printf ''
+  fi
+}
+
+infer_preview_url() {
+  local project_dir=$1
+
+  if package_has_script "$project_dir" dev; then
+    printf 'http://localhost:3000'
+  else
+    printf ''
+  fi
+}
+
+apply_dynamic_profile() {
+  local project_dir=$1
+  local selected_target=$2
+  local github_repo=$3
+  local project_base dev_command preview_url
+
+  project_base="$(basename "$project_dir")"
+  dev_command="$(infer_dev_command "$project_dir")"
+  preview_url="$(infer_preview_url "$project_dir")"
+
+  CML_PROJECT_DIR="$project_dir"
+  CML_PROJECT_NAME="${NAME_OVERRIDE:-$project_base}"
+  CML_WORKSPACE_NAME="${WORKSPACE_OVERRIDE:-$CML_PROJECT_NAME Cockpit}"
+  CML_WORKSPACE_DESCRIPTION="One-click cmux Codex cockpit for $CML_PROJECT_NAME"
+  CML_PREVIEW_URL="${PREVIEW_OVERRIDE:-$preview_url}"
+  CML_DEV_COMMAND="${DEV_COMMAND_OVERRIDE:-$dev_command}"
+  CML_PLAN_DOC="README.md"
+  CML_CODEX_MODEL="gpt-5.5"
+  CML_CODEX_EFFORT="xhigh"
+  CML_SANDBOX="danger-full-access"
+  CML_APPROVAL="never"
+  CML_OPEN_CODEX_APP="true"
+  CML_AUTOSTART_ROLES="false"
+  CML_ROLE_NAMES=("lead" "build" "verify" "ship")
+  CML_ROLE_PROMPT_LEAD="Read AGENTS.md and README.md first when present. You coordinate this project launch around the selected target and GitHub repo. Keep scope tight, assign workstreams clearly, preserve user changes, and keep the work pointed at the requested ship outcome."
+  CML_ROLE_PROMPT_BUILD="Read AGENTS.md and README.md first when present. You own the implementation workstream for the selected target. Make the smallest coherent code change, keep git status clean, and avoid unrelated refactors."
+  CML_ROLE_PROMPT_VERIFY="Read AGENTS.md and README.md first when present. You own verification. Identify the project’s correct checks, run the narrowest useful tests first, then broaden only when the risk requires it."
+  CML_ROLE_PROMPT_SHIP="Read AGENTS.md and README.md first when present. You own shipping hygiene: inspect branch, origin, changed files, verification status, and make sure completed repo-visible work is committed and pushed according to the target repo instructions."
+  CML_SELECTED_TARGET="$selected_target"
+  CML_GITHUB_REPO="$github_repo"
+}
+
+ensure_origin_for_github_repo() {
+  local project_dir=$1
+  local github_repo=$2
+  local existing
+
+  [ -n "$github_repo" ] || return 0
+  git -C "$project_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1 || return 0
+  existing="$(git -C "$project_dir" remote get-url origin 2>/dev/null || true)"
+  [ -z "$existing" ] || return 0
+  [ "$DRY_RUN" -eq 1 ] && return 0
+  git -C "$project_dir" remote add origin "$(github_ssh_url "$github_repo")"
+}
+
+select_github_repo() {
+  local default_repo=$1
+  local input tmp line score kind label path repo url
+
+  input="$GITHUB_OVERRIDE"
+  if [ -z "$input" ]; then
+    input="$(prompt_value "Which GitHub repo should this contribute to?" "$default_repo")"
+  fi
+
+  if [ -z "$input" ]; then
+    printf ''
+    return 0
+  fi
+
+  repo="$(normalize_github_repo_ref "$input" 2>/dev/null || true)"
+  if [ -n "$repo" ]; then
+    printf '%s' "$repo"
+    return 0
+  fi
+
+  tmp="$(mktemp -t cmux-codex-github.XXXXXX)"
+  emit_github_candidates "$input" > "$tmp"
+  if [ ! -s "$tmp" ]; then
+    rm -f "$tmp"
+    die "no GitHub repo matched: $input"
+  fi
+
+  line="$(choose_candidate "$input" "$tmp")"
+  rm -f "$tmp"
+  IFS=$'\t' read -r score kind label path repo url <<EOF
+$line
+EOF
+  printf '%s' "$repo"
+}
+
+run_picker() {
+  local query candidate_file line score kind label path repo url project_dir selected_target
+  local default_repo github_repo matched_profile matched_name matched_path
+
+  query="$PICKER_QUERY"
+  if [ -z "$query" ]; then
+    query="$(prompt_value "What file, app, folder, or GitHub repo are you working on?" "")"
+  fi
+  [ -n "$query" ] || die "nothing to launch"
+
+  candidate_file="$(mktemp -t cmux-codex-candidates.XXXXXX)"
+  direct_path_candidate "$query" > "$candidate_file" 2>/dev/null || true
+  collect_candidates "$query" >> "$candidate_file"
+  sort -rn "$candidate_file" | awk -F '\t' '!seen[$2 "\t" $4 "\t" $5]++' > "$candidate_file.sorted"
+  mv "$candidate_file.sorted" "$candidate_file"
+
+  [ -s "$candidate_file" ] || die "no local files or GitHub repos matched: $query"
+  line="$(choose_candidate "$query" "$candidate_file")"
+  rm -f "$candidate_file"
+
+  IFS=$'\t' read -r score kind label path repo url <<EOF
+$line
+EOF
+
+  case "$kind" in
+    file)
+      selected_target="$path"
+      project_dir="$(git -C "$(dirname "$path")" rev-parse --show-toplevel 2>/dev/null || dirname "$path")"
+      default_repo="$repo"
+      ;;
+    local-repo)
+      selected_target="$path"
+      project_dir="$path"
+      default_repo="${repo:-$(git_origin_ref_for "$path" 2>/dev/null || true)}"
+      ;;
+    github-repo)
+      selected_target="$repo"
+      project_dir="$(clone_or_resolve_github_repo "$repo")"
+      default_repo="$repo"
+      ;;
+    *)
+      die "unknown picker match kind: $kind"
+      ;;
+  esac
+
+  project_dir="$(cd "$project_dir" && pwd)"
+  github_repo="$(select_github_repo "$default_repo")"
+  ensure_origin_for_github_repo "$project_dir" "$github_repo"
+
+  matched_profile="$(profile_for_project_dir "$project_dir" || true)"
+  if [ -n "$matched_profile" ]; then
+    IFS=$'\t' read -r matched_name matched_path <<EOF
+$matched_profile
+EOF
+    PROFILE="$matched_name"
+    PROFILE_PATH="$matched_path"
+    # shellcheck source=/dev/null
+    source "$PROFILE_PATH"
+    CML_SELECTED_TARGET="$selected_target"
+    CML_GITHUB_REPO="$github_repo"
+  else
+    PROFILE="dynamic"
+    PROFILE_PATH="interactive"
+    apply_dynamic_profile "$project_dir" "$selected_target" "$github_repo"
+  fi
 }
 
 build_layout() {
@@ -256,7 +878,7 @@ build_layout() {
     if [ "$CML_AUTOSTART_ROLES" = "true" ]; then
       role_command="codex -C $q_project_dir -m $q_model -c $q_config -s $q_sandbox -a $q_approval $(shell_quote "$role_prompt")"
     else
-      role_command="printf 'Role: %s\\nProject: %s\\nShared context: %s\\n\\nCodex opens idle here to avoid unintended background work. Paste the task when you want this role to start.\\n\\n' $(shell_quote "$role") $(shell_quote "$project_dir") $q_session_file; exec codex -C $q_project_dir -m $q_model -c $q_config -s $q_sandbox -a $q_approval"
+      role_command="printf 'Role: %s\\nProject: %s\\nShared context: %s\\nSelected target: %s\\nGitHub target: %s\\n\\nCodex opens idle here to avoid unintended background work. Paste the task when you want this role to start.\\n\\n' $(shell_quote "$role") $(shell_quote "$project_dir") $q_session_file $(shell_quote "${CML_SELECTED_TARGET:-unspecified}") $(shell_quote "${CML_GITHUB_REPO:-use target repo origin}"); exec codex -C $q_project_dir -m $q_model -c $q_config -s $q_sandbox -a $q_approval"
     fi
     surfaces+=("$(terminal_surface "$role" "$role_command")")
   done
@@ -332,6 +954,20 @@ while [ "$#" -gt 0 ]; do
       shift; [ "$#" -gt 0 ] || die "missing dev command"
       DEV_COMMAND_OVERRIDE="$1"
       ;;
+    --choose|--interactive)
+      INTERACTIVE_PICKER=1
+      ;;
+    --query)
+      shift; [ "$#" -gt 0 ] || die "missing query"
+      PICKER_QUERY="$1"
+      ;;
+    --github)
+      shift; [ "$#" -gt 0 ] || die "missing GitHub repo"
+      GITHUB_OVERRIDE="$1"
+      ;;
+    --no-clone)
+      CLONE_MISSING_GITHUB=0
+      ;;
     --app)
       OPEN_CODEX_APP_OVERRIDE="true"
       ;;
@@ -386,10 +1022,14 @@ if [ "$RESUME_LAST" -eq 1 ]; then
   load_last_state
 fi
 
-PROFILE_PATH="$(profile_path_for "$PROFILE" || true)"
-[ -n "${PROFILE_PATH:-}" ] || die "profile not found: $PROFILE"
-# shellcheck source=/dev/null
-source "$PROFILE_PATH"
+if [ "$INTERACTIVE_PICKER" -eq 1 ]; then
+  run_picker
+else
+  PROFILE_PATH="$(profile_path_for "$PROFILE" || true)"
+  [ -n "${PROFILE_PATH:-}" ] || die "profile not found: $PROFILE"
+  # shellcheck source=/dev/null
+  source "$PROFILE_PATH"
+fi
 
 CML_PROJECT_DIR="${PROJECT_OVERRIDE:-${CML_PROJECT_DIR:-$PWD}}"
 CML_PROJECT_NAME="${NAME_OVERRIDE:-${CML_PROJECT_NAME:-$(basename "$CML_PROJECT_DIR")}}"
@@ -413,6 +1053,7 @@ CML_PROJECT_DIR="$(cd "$CML_PROJECT_DIR" && pwd)"
 [ -d "$CML_PROJECT_DIR" ] || die "project dir not found: $CML_PROJECT_DIR"
 
 SESSION_FILE="$(create_shared_context "$CML_PROJECT_NAME" "$CML_PROJECT_DIR")"
+update_shared_context_selection "$SESSION_FILE" "$CML_PROJECT_NAME" "$CML_PROJECT_DIR"
 LAYOUT_JSON="$(build_layout "$CML_PROJECT_NAME" "$CML_PROJECT_DIR" "$SESSION_FILE")"
 
 if [ "$PRINT_LAYOUT" -eq 1 ]; then
@@ -436,6 +1077,8 @@ sandbox: $CML_SANDBOX
 approval: $CML_APPROVAL
 preview: ${CML_PREVIEW_URL:-none}
 dev_command: ${CML_DEV_COMMAND:-none}
+selected_target: ${CML_SELECTED_TARGET:-none}
+github_repo: ${CML_GITHUB_REPO:-none}
 shared_context: $SESSION_FILE
 docs:
 $(existing_doc_list "$CML_PROJECT_DIR" | sed 's/^/  - /')
