@@ -142,6 +142,7 @@ HOME="$seed_tmp/home" CMUX_CODEX_LAUNCHER_HOME="$seed_tmp/config" \
 for seeded_file in \
   AGENTS.md \
   docs/agent-workflow.md \
+  docs/workflow-packaging-audit.md \
   docs/queue.md \
   docs/knowledge.md \
   .codex/config.toml

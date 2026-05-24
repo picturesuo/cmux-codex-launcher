@@ -381,6 +381,7 @@ This repo is worked by Codex sessions launched through cmux-codex-launcher.
 
 - README.md when present.
 - docs/agent-workflow.md
+- docs/workflow-packaging-audit.md
 - docs/queue.md
 - docs/knowledge.md
 
@@ -412,6 +413,15 @@ This is the Codex-first workflow source for "$project_name".
 6. Run the proof that matches the risk.
 7. Update the shared context with status, changed files, verification, and next action.
 
+## Workflow Packaging
+
+- Use docs/workflow-packaging-audit.md before creating a new skill, subagent,
+  automation, or recurring workflow asset.
+- Reuse or extend existing skills, docs, scripts, and automations before adding
+  another artifact.
+- Create only high-confidence missing items with stable inputs, a repeatable
+  procedure, and a clear stopping condition.
+
 ## Context Reset
 
 - Treat about 80% context used as the reset point.
@@ -431,6 +441,92 @@ This is the Codex-first workflow source for "$project_name".
 - Follow the repo-local AGENTS.md and the selected GitHub target from the launcher.
 - Commit and push only verified repo-visible work.
 - Keep private, scratch, partial, failing, and unverified work out of the publish path.
+EOF
+  fi
+
+  if [ ! -e "$project_dir/docs/workflow-packaging-audit.md" ]; then
+    cat > "$project_dir/docs/workflow-packaging-audit.md" <<'EOF'
+# Workflow Packaging Audit
+
+## Goal
+
+Look across recent Codex work and package only repeated manual workflows that
+are stable, valuable, and not already covered.
+
+## Evidence Order
+
+1. Recent Codex sessions, task summaries, shared context files, and repo docs.
+2. Codex Memories and rollout summaries for repeated patterns.
+3. Chronicle, when enabled, for discovery only. Confirm important details in
+   the source system before acting.
+4. Existing skills, custom subagents, automations, project docs, and scripts.
+
+Do not treat Memories, Chronicle, screenshots, or summaries as source-of-truth
+for sensitive facts. Use them as leads and verify in the repo, tracker, doc,
+calendar, or CLI that owns the work.
+
+## Candidate Test
+
+Package a workflow only when:
+
+- it happened at least twice, or is clearly likely to recur and costly to repeat;
+- it has stable inputs, a repeatable procedure, and a clear output or stopping
+  condition;
+- it materially improves speed, quality, consistency, or reliability;
+- it is not already adequately covered.
+
+## Smallest Useful Form
+
+- Skill: reusable method, playbook, or tool workflow.
+- Custom subagent: bounded specialist investigation or review role.
+- Automation: scheduled or recurring check, report, reminder, or monitor.
+- Extend existing: small improvement to a current skill, doc, script,
+  automation, or agent instruction.
+- Skip: one-off, ambiguous, sensitive, poorly evidenced, or better handled by a
+  normal prompt.
+
+## Shortlist Format
+
+```text
+Repeated workflow:
+Evidence and dates:
+Frequency/confidence:
+Recommended form:
+Worth creating because:
+Already covered by:
+Decision:
+```
+
+## Creation Rules
+
+Create only high-confidence missing items. Keep each item narrow: expected
+inputs, exact procedure or delegation boundary, output, stopping condition,
+verification, source systems, and privacy limits.
+
+Prefer extending existing assets over duplicating them. Prefer a repo doc or
+script over a skill when the workflow belongs only to this repo. Prefer an
+automation only after the interactive prompt shape has worked and the output is
+easy to review.
+
+## Codex App Patterns
+
+- Sessions are the main work threads; keep one coherent unit of work per thread.
+- Fork for alternatives, compact before useful context disappears, and delegate
+  bounded research, tests, triage, or archaeology to subagents when available.
+- Memories store stable preferences and recurring patterns; hard requirements
+  belong in AGENTS.md, repo docs, or scripts.
+- Automations should be specific, repeatable, and easy to review.
+- Skills should bundle repeatable instructions, resources, and scripts for work
+  that should be available across Codex surfaces.
+
+## Finish Format
+
+```text
+Created or extended:
+Deliberately skipped:
+Needs more evidence:
+Verification:
+```
 EOF
   fi
 
@@ -1569,6 +1665,7 @@ shared_context: $SESSION_FILE
 codex_workflow_files:
   - AGENTS.md
   - docs/agent-workflow.md
+  - docs/workflow-packaging-audit.md
   - docs/queue.md
   - docs/knowledge.md
   - .codex/config.toml
