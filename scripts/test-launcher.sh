@@ -25,6 +25,16 @@ case "$dry_run" in
   * ) printf 'dry run did not include roles\n' >&2; exit 1 ;;
 esac
 
+case "$dry_run" in
+  *"workspace_mode: sidebar"* ) ;;
+  * ) printf 'dry run did not use sidebar workspace mode\n' >&2; exit 1 ;;
+esac
+
+case "$dry_run" in
+  *'"name":"Penny: lead"'* ) ;;
+  * ) printf 'dry run did not create a left-sidebar lead workspace\n' >&2; exit 1 ;;
+esac
+
 picker_dry_run="$("$ROOT/bin/cmux-codex-launcher" --choose --query penny --dry-run)"
 
 case "$picker_dry_run" in

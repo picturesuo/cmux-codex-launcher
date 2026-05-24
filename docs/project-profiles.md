@@ -44,6 +44,7 @@ The user-facing cmux action and `/Users/bensuo/codex-launchpad.sh` default to
 - `CML_OPEN_CODEX_APP`
 - `CML_AUTOSTART_ROLES`
 - `CML_SHOW_FEED_SIDEBAR`
+- `CML_WORKSPACE_MODE`
 - `CML_SELECTED_TARGET`
 - `CML_GITHUB_REPO`
 
@@ -57,6 +58,11 @@ CML_EXTRA_DOCS=("docs/roadmap.md" "docs/runbook.md")
 Set `CML_AUTOSTART_ROLES=false` when the launcher should open role tabs ready
 but idle. Set it to `true` only when you intentionally want each Codex tab to
 start work immediately from its role prompt.
+
+`CML_WORKSPACE_MODE=sidebar` is the default. It opens one cmux workspace per
+role so the left sidebar is the role switcher and unread agent messages can
+mark the relevant workspace. Use `tabs` only for the older single-workspace,
+multi-surface layout.
 
 `CML_SELECTED_TARGET` and `CML_GITHUB_REPO` are normally set by the chooser.
 Profiles do not need to define them.

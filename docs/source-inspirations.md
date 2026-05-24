@@ -96,3 +96,30 @@ Launcher adaptation:
   do, not as background automation hidden from the user.
 - Preserve useful findings in shared context or docs so future prompts start
   with better local knowledge.
+
+## Recent Agent Session Managers
+
+Sources:
+
+- https://mato.sh/
+- https://getconduit.sh/docs/
+- https://github.com/codex-yolo/codex-yolo
+- https://pkg.go.dev/github.com/izll/agent-session-manager
+- https://www.warp.dev/agents
+
+Useful patterns:
+
+- Use a visible navigation surface for agent sessions instead of relying on
+  hidden terminal tabs.
+- Give each agent a separate terminal/session boundary.
+- Keep instant switching keyboard-friendly.
+- Show activity, idle, blocked, or unread state beside the session entry.
+- Keep the raw agent TUI intact rather than wrapping it in a custom chat UI.
+
+Launcher adaptation:
+
+- Default cmux launches now create one left-sidebar workspace per role.
+- Each role workspace contains one Codex surface, so only one agent is visible
+  at a time.
+- cmux Feed and notification hooks provide the attention signal instead of
+  requiring the user to scan every agent surface.

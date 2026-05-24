@@ -313,6 +313,11 @@ browser_surface() {
     "$(json_string "$url")"
 }
 
+single_surface_layout() {
+  local surface_json=$1
+  printf '{"pane":{"surfaces":[%s]}}' "$surface_json"
+}
+
 build_role_prompt() {
   local role=$1
   local project_name=$2
@@ -937,14 +942,32 @@ EOF
   fi
 }
 
-build_layout() {
+plan_surface_for() {
   local project_name=$1
   local project_dir=$2
   local session_file=$3
   local plan_doc=${CML_PLAN_DOC:-}
-  local q_project_dir q_session_file q_model q_config q_sandbox q_approval q_plan_path
-  local plan_command role role_prompt role_command dev_command surfaces_json
-  local -a surfaces=()
+  local q_session_file q_plan_path plan_command
+
+  q_session_file="$(shell_quote "$session_file")"
+
+  if [ -n "$plan_doc" ] && [ -f "$project_dir/$plan_doc" ]; then
+    q_plan_path="$(shell_quote "$project_dir/$plan_doc")"
+    plan_command="printf 'Plan doc: %s\\nShared context: %s\\n\\nOpen the formatted markdown panel after launch with:\\n  cmux markdown open %s --workspace \"\$CMUX_WORKSPACE_ID\" --direction right --focus false\\n\\n' $(shell_quote "$plan_doc") $q_session_file $q_plan_path; exec \"\${SHELL:-/bin/zsh}\" -l"
+  else
+    plan_command="printf 'Shared context: %s\\n' $q_session_file; printf 'No plan doc configured.\\n'; exec \"\${SHELL:-/bin/zsh}\" -l"
+  fi
+
+  terminal_surface "plan" "$plan_command"
+}
+
+role_surface_for() {
+  local role=$1
+  local project_name=$2
+  local project_dir=$3
+  local session_file=$4
+  local q_project_dir q_session_file q_model q_config q_sandbox q_approval
+  local role_prompt role_command
 
   q_project_dir="$(shell_quote "$project_dir")"
   q_session_file="$(shell_quote "$session_file")"
@@ -953,22 +976,68 @@ build_layout() {
   q_sandbox="$(shell_quote "$CML_SANDBOX")"
   q_approval="$(shell_quote "$CML_APPROVAL")"
 
-  if [ -n "$plan_doc" ] && [ -f "$project_dir/$plan_doc" ]; then
-    q_plan_path="$(shell_quote "$project_dir/$plan_doc")"
-    plan_command="printf 'Plan doc: %s\\nShared context: %s\\n\\nOpen the formatted markdown panel after launch with:\\n  cmux markdown open %s --workspace \"\$CMUX_WORKSPACE_ID\" --direction right --focus false\\n\\n' $(shell_quote "$plan_doc") $q_session_file $q_plan_path; exec \"\${SHELL:-/bin/zsh}\" -l"
+  role_prompt="$(build_role_prompt "$role" "$project_name" "$project_dir" "$session_file")"
+  if [ "$CML_AUTOSTART_ROLES" = "true" ]; then
+    role_command="codex -C $q_project_dir -m $q_model -c $q_config -s $q_sandbox -a $q_approval $(shell_quote "$role_prompt")"
   else
-    plan_command="printf 'Shared context: %s\\n' $q_session_file; printf 'No plan doc configured.\\n'; exec \"\${SHELL:-/bin/zsh}\" -l"
+    role_command="printf 'Role: %s\\nProject: %s\\nShared context: %s\\nSelected target: %s\\nGitHub target: %s\\n\\nCodex opens idle here to avoid unintended background work. Paste the task when you want this role to start.\\n\\n' $(shell_quote "$role") $(shell_quote "$project_dir") $q_session_file $(shell_quote "${CML_SELECTED_TARGET:-unspecified}") $(shell_quote "${CML_GITHUB_REPO:-use target repo origin}"); exec codex -C $q_project_dir -m $q_model -c $q_config -s $q_sandbox -a $q_approval"
   fi
-  surfaces+=("$(terminal_surface "plan" "$plan_command")")
+
+  terminal_surface "$role" "$role_command"
+}
+
+workspace_entry_json() {
+  local name=$1
+  local description=$2
+  local layout_json=$3
+
+  printf '{"name":%s,"description":%s,"layout":%s}' \
+    "$(json_string "$name")" \
+    "$(json_string "$description")" \
+    "$layout_json"
+}
+
+build_workspace_plan() {
+  local project_name=$1
+  local project_dir=$2
+  local session_file=$3
+  local role surface layout dev_command entries_json
+  local -a entries=()
 
   for role in "${CML_ROLE_NAMES[@]}"; do
-    role_prompt="$(build_role_prompt "$role" "$project_name" "$project_dir" "$session_file")"
-    if [ "$CML_AUTOSTART_ROLES" = "true" ]; then
-      role_command="codex -C $q_project_dir -m $q_model -c $q_config -s $q_sandbox -a $q_approval $(shell_quote "$role_prompt")"
-    else
-      role_command="printf 'Role: %s\\nProject: %s\\nShared context: %s\\nSelected target: %s\\nGitHub target: %s\\n\\nCodex opens idle here to avoid unintended background work. Paste the task when you want this role to start.\\n\\n' $(shell_quote "$role") $(shell_quote "$project_dir") $q_session_file $(shell_quote "${CML_SELECTED_TARGET:-unspecified}") $(shell_quote "${CML_GITHUB_REPO:-use target repo origin}"); exec codex -C $q_project_dir -m $q_model -c $q_config -s $q_sandbox -a $q_approval"
-    fi
-    surfaces+=("$(terminal_surface "$role" "$role_command")")
+    surface="$(role_surface_for "$role" "$project_name" "$project_dir" "$session_file")"
+    layout="$(single_surface_layout "$surface")"
+    entries+=("$(workspace_entry_json "$project_name: $role" "$CML_WORKSPACE_DESCRIPTION" "$layout")")
+  done
+
+  dev_command="${CML_DEV_COMMAND:-}"
+  if [ -n "$dev_command" ]; then
+    surface="$(terminal_surface "dev-server" "$dev_command")"
+    layout="$(single_surface_layout "$surface")"
+    entries+=("$(workspace_entry_json "$project_name: dev-server" "Development server for $project_name" "$layout")")
+  fi
+
+  if [ -n "${CML_PREVIEW_URL:-}" ]; then
+    surface="$(browser_surface "preview" "$CML_PREVIEW_URL")"
+    layout="$(single_surface_layout "$surface")"
+    entries+=("$(workspace_entry_json "$project_name: preview" "Browser preview for $project_name" "$layout")")
+  fi
+
+  entries_json="$(join_comma "${entries[@]}")"
+  printf '{"mode":"sidebar","workspaces":[%s]}' "$entries_json"
+}
+
+build_layout() {
+  local project_name=$1
+  local project_dir=$2
+  local session_file=$3
+  local role dev_command surfaces_json
+  local -a surfaces=()
+
+  surfaces+=("$(plan_surface_for "$project_name" "$project_dir" "$session_file")")
+
+  for role in "${CML_ROLE_NAMES[@]}"; do
+    surfaces+=("$(role_surface_for "$role" "$project_name" "$project_dir" "$session_file")")
   done
 
   dev_command="${CML_DEV_COMMAND:-}"
@@ -981,6 +1050,53 @@ build_layout() {
 
   surfaces_json="$(join_comma "${surfaces[@]}")"
   printf '{"pane":{"surfaces":[%s]}}' "$surfaces_json"
+}
+
+launch_sidebar_workspaces() {
+  local project_name=$1
+  local project_dir=$2
+  local session_file=$3
+  local role surface layout dev_command i focus
+
+  if [ -n "${CML_PREVIEW_URL:-}" ]; then
+    surface="$(browser_surface "preview" "$CML_PREVIEW_URL")"
+    layout="$(single_surface_layout "$surface")"
+    cmux new-workspace \
+      --name "$project_name: preview" \
+      --description "Browser preview for $project_name" \
+      --cwd "$project_dir" \
+      --layout "$layout" \
+      --focus false
+  fi
+
+  dev_command="${CML_DEV_COMMAND:-}"
+  if [ -n "$dev_command" ]; then
+    surface="$(terminal_surface "dev-server" "$dev_command")"
+    layout="$(single_surface_layout "$surface")"
+    cmux new-workspace \
+      --name "$project_name: dev-server" \
+      --description "Development server for $project_name" \
+      --cwd "$project_dir" \
+      --layout "$layout" \
+      --focus false
+  fi
+
+  for ((i = ${#CML_ROLE_NAMES[@]} - 1; i >= 0; i--)); do
+    role="${CML_ROLE_NAMES[$i]}"
+    surface="$(role_surface_for "$role" "$project_name" "$project_dir" "$session_file")"
+    layout="$(single_surface_layout "$surface")"
+    if [ "$i" -eq 0 ]; then
+      focus="$FOCUS_WORKSPACE"
+    else
+      focus=false
+    fi
+    cmux new-workspace \
+      --name "$project_name: $role" \
+      --description "$CML_WORKSPACE_DESCRIPTION" \
+      --cwd "$project_dir" \
+      --layout "$layout" \
+      --focus "$focus"
+  done
 }
 
 load_last_state() {
@@ -1136,6 +1252,7 @@ CML_APPROVAL="${CML_APPROVAL:-on-request}"
 CML_OPEN_CODEX_APP="${OPEN_CODEX_APP_OVERRIDE:-${CML_OPEN_CODEX_APP:-true}}"
 CML_AUTOSTART_ROLES="${AUTOSTART_ROLES_OVERRIDE:-${CML_AUTOSTART_ROLES:-false}}"
 CML_SHOW_FEED_SIDEBAR="${CML_SHOW_FEED_SIDEBAR:-true}"
+CML_WORKSPACE_MODE="${CML_WORKSPACE_MODE:-sidebar}"
 
 if [ "${#CML_ROLE_NAMES[@]}" -eq 0 ]; then
   CML_ROLE_NAMES=("lead" "build" "verify")
@@ -1146,7 +1263,11 @@ CML_PROJECT_DIR="$(cd "$CML_PROJECT_DIR" && pwd)"
 
 SESSION_FILE="$(create_shared_context "$CML_PROJECT_NAME" "$CML_PROJECT_DIR")"
 update_shared_context_selection "$SESSION_FILE" "$CML_PROJECT_NAME" "$CML_PROJECT_DIR"
-LAYOUT_JSON="$(build_layout "$CML_PROJECT_NAME" "$CML_PROJECT_DIR" "$SESSION_FILE")"
+if [ "$CML_WORKSPACE_MODE" = "tabs" ]; then
+  LAYOUT_JSON="$(build_layout "$CML_PROJECT_NAME" "$CML_PROJECT_DIR" "$SESSION_FILE")"
+else
+  LAYOUT_JSON="$(build_workspace_plan "$CML_PROJECT_NAME" "$CML_PROJECT_DIR" "$SESSION_FILE")"
+fi
 
 if [ "$PRINT_LAYOUT" -eq 1 ]; then
   printf '%s\n' "$LAYOUT_JSON"
@@ -1164,6 +1285,7 @@ codex_app: $CML_OPEN_CODEX_APP
 cmux_workspace: $CREATE_CMUX
 autostart_roles: $CML_AUTOSTART_ROLES
 feed_sidebar: $CML_SHOW_FEED_SIDEBAR
+workspace_mode: $CML_WORKSPACE_MODE
 model: $CML_CODEX_MODEL
 effort: $CML_CODEX_EFFORT
 sandbox: $CML_SANDBOX
@@ -1191,11 +1313,15 @@ fi
 
 if [ "$CREATE_CMUX" -eq 1 ]; then
   command -v cmux >/dev/null 2>&1 || die "cmux is not installed or not on PATH"
-  cmux new-workspace \
-    --name "$CML_WORKSPACE_NAME" \
-    --description "$CML_WORKSPACE_DESCRIPTION" \
-    --cwd "$CML_PROJECT_DIR" \
-    --layout "$LAYOUT_JSON" \
-    --focus "$FOCUS_WORKSPACE"
+  if [ "$CML_WORKSPACE_MODE" = "tabs" ]; then
+    cmux new-workspace \
+      --name "$CML_WORKSPACE_NAME" \
+      --description "$CML_WORKSPACE_DESCRIPTION" \
+      --cwd "$CML_PROJECT_DIR" \
+      --layout "$LAYOUT_JSON" \
+      --focus "$FOCUS_WORKSPACE"
+  else
+    launch_sidebar_workspaces "$CML_PROJECT_NAME" "$CML_PROJECT_DIR" "$SESSION_FILE"
+  fi
   show_feed_sidebar
 fi

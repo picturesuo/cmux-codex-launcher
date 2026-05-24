@@ -53,14 +53,13 @@ target so every Codex tab starts from the same repo boundary.
 
 For a profile, the launcher can open:
 
-- a cmux workspace with named Codex CLI tabs
-- a plan/docs terminal with the exact markdown viewer command
-- an optional dev-server tab
-- an optional browser preview tab
+- a set of left-sidebar cmux workspaces, one per Codex role
+- an optional dev-server workspace
+- an optional browser preview workspace
 - the cmux Feed in the right sidebar for agent messages and approvals
 - the Codex desktop app for the same workspace path and model settings
 
-By default the role tabs open Codex CLI idle. That keeps the workspace ready
+By default each role workspace opens Codex CLI idle. That keeps the workspace ready
 without letting background agents run setup commands or create recursive cmux
 workspaces before you give them the actual task.
 
@@ -91,6 +90,7 @@ CML_CODEX_EFFORT="xhigh"
 CML_ROLE_NAMES=("lead" "create-ui" "brain-evidence" "learn-canvas" "export-verify")
 CML_AUTOSTART_ROLES="false"
 CML_SHOW_FEED_SIDEBAR="true"
+CML_WORKSPACE_MODE="sidebar"
 ```
 
 Do not put API keys, database passwords, OAuth secrets, or tokens in a profile.
