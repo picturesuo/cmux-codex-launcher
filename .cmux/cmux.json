@@ -2,6 +2,18 @@
   "$schema": "https://raw.githubusercontent.com/manaflow-ai/cmux/main/web/data/cmux.schema.json",
   "schemaVersion": 1,
   "actions": {
+    "choose-codex-cockpit": {
+      "type": "command",
+      "title": "Choose Codex Cockpit",
+      "subtitle": "Search files and GitHub, then launch the right cmux workspace",
+      "command": "bin/cmux-codex-launcher --choose",
+      "target": "newTabInCurrentPane",
+      "palette": true,
+      "icon": {
+        "type": "symbol",
+        "name": "magnifyingglass.circle"
+      }
+    },
     "open-penny-cockpit": {
       "type": "command",
       "title": "Open Penny Cockpit",
@@ -15,7 +27,39 @@
       }
     }
   },
+  "ui": {
+    "newWorkspace": {
+      "action": "choose-codex-cockpit",
+      "contextMenu": [
+        {
+          "action": "choose-codex-cockpit",
+          "title": "Choose Codex Cockpit"
+        },
+        {
+          "action": "open-penny-cockpit",
+          "title": "Open Penny Cockpit"
+        },
+        {
+          "type": "separator"
+        },
+        {
+          "action": "cmux.newTerminal",
+          "title": "New Terminal"
+        },
+        {
+          "action": "cmux.newBrowser",
+          "title": "New Browser"
+        }
+      ]
+    }
+  },
   "commands": [
+    {
+      "name": "Launcher Picker Dry Run",
+      "description": "Resolve a file/app/repo search into a launch plan without opening cmux or Codex app.",
+      "keywords": ["launcher", "picker", "dry run", "github"],
+      "command": "bin/cmux-codex-launcher --choose --query penny --dry-run"
+    },
     {
       "name": "Launcher Dry Run",
       "description": "Print the Penny launcher plan without opening cmux or Codex app.",
@@ -30,4 +74,3 @@
     }
   ]
 }
-
