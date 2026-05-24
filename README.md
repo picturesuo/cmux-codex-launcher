@@ -14,7 +14,8 @@ profiles, deterministic defaults, and cmux workspace layouts.
 ## Quick Start
 
 ```bash
-bin/cmux-codex-launcher --profile penny --dry-run
+bin/cmux-codex-launcher --choose
+bin/cmux-codex-launcher --choose --query penny --dry-run
 bin/cmux-codex-launcher --profile penny
 ```
 
@@ -25,8 +26,28 @@ scripts/install-local.sh
 cmux-codex-launcher
 ```
 
-The default profile is `penny`, so a no-argument run opens Penny unless you set
-`CMUX_CODEX_LAUNCHER_PROFILE`.
+The default profile is still `penny` for deterministic scripts. The cmux action
+uses `--choose`, which asks what file, app, folder, or GitHub repo you are
+working on and which GitHub repo the work should contribute to.
+
+## One-Click Chooser
+
+`--choose` searches:
+
+- local git checkouts and matching files under `~/Desktop`, `~/Projects`,
+  `~/src`, and `~/code`
+- GitHub repos available to the active `gh` account
+- explicit paths typed into the prompt
+
+If a selected GitHub repo is not cloned locally, the launcher clones it under
+`~/Desktop` by default. Set `CMUX_CODEX_PROJECTS_DIR` to use a different clone
+root. Set `CMUX_CODEX_SEARCH_ROOTS` to a colon-separated list when your working
+folders live somewhere else.
+
+When the selected project matches a profile, the launcher reuses that profile.
+Otherwise it builds a generic cockpit with `lead`, `build`, `verify`, and
+`ship` roles. The shared context records the selected file/folder and GitHub
+target so every Codex tab starts from the same repo boundary.
 
 ## What Opens
 
@@ -77,6 +98,8 @@ Source a target project’s `.env.local` from the dev-server command instead.
 
 ```bash
 bin/cmux-codex-launcher --profile penny
+bin/cmux-codex-launcher --choose
+bin/cmux-codex-launcher --choose --query "pricing page" --dry-run
 bin/cmux-codex-launcher --project /path/to/repo --name "My Repo"
 bin/cmux-codex-launcher --resume-last
 bin/cmux-codex-launcher --status-last
