@@ -25,5 +25,28 @@ case "$dry_run" in
   * ) printf 'dry run did not include roles\n' >&2; exit 1 ;;
 esac
 
-printf 'ok: launcher smoke tests passed\n'
+picker_dry_run="$("$ROOT/bin/cmux-codex-launcher" --choose --query penny --dry-run)"
 
+case "$picker_dry_run" in
+  *"profile: penny"* ) ;;
+  * ) printf 'picker did not reuse Penny profile\n' >&2; exit 1 ;;
+esac
+
+case "$picker_dry_run" in
+  *"github_repo: picturesuo/Penny"* ) ;;
+  * ) printf 'picker did not infer Penny GitHub repo\n' >&2; exit 1 ;;
+esac
+
+dynamic_dry_run="$("$ROOT/bin/cmux-codex-launcher" --choose --query "$ROOT" --dry-run)"
+
+case "$dynamic_dry_run" in
+  *"profile: dynamic"* ) ;;
+  * ) printf 'direct-path picker did not create dynamic profile\n' >&2; exit 1 ;;
+esac
+
+case "$dynamic_dry_run" in
+  *"ship"* ) ;;
+  * ) printf 'dynamic picker did not include shipping role\n' >&2; exit 1 ;;
+esac
+
+printf 'ok: launcher smoke tests passed\n'
