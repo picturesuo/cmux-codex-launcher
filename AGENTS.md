@@ -15,6 +15,7 @@ preview/log surfaces, shared context, and a clear ship path.
 - `docs/launcher-design.md`: architecture and external references.
 - `docs/agent-workflow.md`: launch loop, handoff, and shipping behavior.
 - `docs/knowledge.md`: stable repo facts and user preferences.
+- `docs/agentic-workflow-research.md`: sourced workflow research and success criteria.
 - `docs/source-inspirations.md`: external patterns adapted for this repo.
 
 ## Hard Rules
