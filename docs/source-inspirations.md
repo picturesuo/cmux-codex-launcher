@@ -16,6 +16,7 @@ Source:
 
 - https://github.com/karpathy/autoresearch
 - https://github.com/karpathy/autoresearch/blob/master/program.md
+- Karpathy-inspired `CLAUDE.md` guidelines: https://github.com/forrestchang/andrej-karpathy-skills/blob/main/CLAUDE.md
 
 Useful patterns:
 
@@ -25,6 +26,10 @@ Useful patterns:
 - Use a fixed evaluation loop when possible.
 - Keep or discard changes based on measured output.
 - Prefer simplicity when two outcomes are equivalent.
+- Use four concise behavioral rules in agent instructions: think before coding,
+  simplicity first, surgical changes, and goal-driven execution.
+- Treat broad or ambiguous tasks as work to convert into testable criteria
+  before editing.
 
 Agent behavior rules adapted here:
 
@@ -36,6 +41,8 @@ Agent behavior rules adapted here:
   only dead code created by the current change.
 - Goal-driven execution: turn tasks into testable criteria, run the check, then
   loop until the result proves completion.
+- Auto publish stays gated by proof: inspect dirty state, verify, commit, then
+  push finished repo-visible work.
 
 Launcher adaptation:
 

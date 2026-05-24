@@ -52,6 +52,8 @@ Deterministic profile launches remain available for scripted paths such as
 - Steinberger-style AGENTS: terse hard rules, strong routing, secrets hygiene,
   atomic publish boundaries, and practical git constraints. This repo adapts
   that style to the user's requested auto commit/push workflow.
+- Karpathy-inspired `CLAUDE.md`: seeded target `AGENTS.md` files carry think
+  before coding, simplicity first, surgical changes, and goal-driven execution.
 - cmux custom commands: project-local `.cmux/cmux.json`, actions, command
   palette entries, and workspace layouts.
 - cmux CLI: `new-workspace --layout` for scripted split layouts.
@@ -102,6 +104,7 @@ the right half of each role workspace rather than as another tab or pane pile.
 
 - Karpathy `autoresearch`: https://github.com/karpathy/autoresearch
 - Karpathy `program.md`: https://github.com/karpathy/autoresearch/blob/master/program.md
+- Karpathy-inspired `CLAUDE.md`: https://github.com/forrestchang/andrej-karpathy-skills/blob/main/CLAUDE.md
 - Steinberger `agent-scripts` AGENTS: https://github.com/steipete/agent-scripts/blob/main/AGENTS.MD
 - Steinberger `Just Talk To It`: https://steipete.me/posts/just-talk-to-it
 - Steinberger Codex app summary: https://zenn.dev/seyz/articles/20260308-steipete-codex-how-to

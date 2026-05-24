@@ -65,6 +65,12 @@ skill, subagent, automation, extension, or skip, `docs/queue.md` holds the next
 small task, `docs/knowledge.md` holds durable facts, and `.codex/config.toml`
 sets repo-scoped model and reasoning defaults.
 
+The seeded `AGENTS.md` adapts the Karpathy-style `CLAUDE.md` rules into Codex:
+think before coding, simplicity first, surgical changes, and goal-driven
+execution. It also carries the Steinberger-style publish boundary: inspect dirty
+state, verify, commit, and push finished repo-visible work unless the user asks
+for local-only work.
+
 Skip seeding when a repo already has its own workflow:
 
 ```bash
@@ -99,7 +105,8 @@ current task.
 ## Adapted Patterns
 
 - Karpathy: Markdown is the program; one loop should name editable surfaces,
-  read-only surfaces, proof, and keep/discard criteria.
+  read-only surfaces, proof, keep/discard criteria, and compact coding rules
+  inspired by `CLAUDE.md`.
 - Steinberger: use plain language, visible boundaries, repo-local rules, exact
   CLIs such as `gh`, and small verified publish units.
 - OpenAI Codex docs: keep personal defaults in `~/.codex/config.toml`, keep

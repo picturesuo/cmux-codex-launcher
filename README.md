@@ -69,6 +69,11 @@ already have their own Codex setup. Use `--reset-task` to clear only the mutable
 task block in the launcher shared context, leaving durable knowledge and repo
 docs intact.
 
+The seeded `AGENTS.md` includes Karpathy-inspired coding rules: think before
+coding, simplicity first, surgical changes, and goal-driven execution. It also
+sets publish mode to auto: verified repo-visible work should be committed and
+pushed unless the user asks for local-only work.
+
 See [docs/codex-app-workflow.md](docs/codex-app-workflow.md).
 
 ## One-Click Chooser

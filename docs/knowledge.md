@@ -72,6 +72,7 @@ read_when:
 - `external`: Codex CLI supports `codex app <path>` on macOS to open Codex Desktop on a workspace path.
 - `external`: RepoBar and CodexBar should run as menu bar apps; summarize and gitcrawl are local CLI tools; ReleaseBar is a reference browser surface; ClawSweeper is documented but not opened by default.
 - `external`: Karpathy's `autoresearch` treats Markdown as the human-written program for agents, with explicit editable files, fixed evaluation, and keep/discard loops.
+- `external`: Karpathy-inspired `CLAUDE.md` guidance uses four compact rules worth carrying into seeded `AGENTS.md`: think before coding, simplicity first, surgical changes, and goal-driven execution.
 - `external`: Steinberger's `agent-scripts` keeps AGENTS guidance terse, routing-heavy, and focused on hard rules; this launcher adapts that style but uses auto commit/push by default.
 
 ## Retrieval Hints

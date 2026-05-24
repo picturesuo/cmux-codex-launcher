@@ -153,6 +153,16 @@ do
   fi
 done
 
+if ! grep -q '## Think Before Coding' "$seed_project/AGENTS.md"; then
+  printf 'codex seed did not include Karpathy-style agent guidance\n' >&2
+  exit 1
+fi
+
+if ! grep -q 'Publish mode is auto' "$seed_project/AGENTS.md"; then
+  printf 'codex seed did not include auto publish guidance\n' >&2
+  exit 1
+fi
+
 if ! grep -q '<!-- codex-task:start -->' "$seed_tmp/home/.codex/cmux-codex-launcher/seed-demo-shared-context.md"; then
   printf 'codex reset did not create the shared context task marker\n' >&2
   exit 1

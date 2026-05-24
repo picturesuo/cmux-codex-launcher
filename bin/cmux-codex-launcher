@@ -385,15 +385,49 @@ This repo is worked by Codex sessions launched through cmux-codex-launcher.
 - docs/queue.md
 - docs/knowledge.md
 
-## Rules
+## Hard Rules
 
 - Follow the user's latest request.
 - Keep current-task state in the shared context file printed by the launcher.
 - Keep durable project facts in docs/knowledge.md.
 - Keep the next small task in docs/queue.md.
-- State assumptions before implementation when they affect the path.
-- Verify with the narrowest useful local command before committing or pushing.
 - Do not store secrets in repo docs, profiles, .codex config, commits, or PR bodies.
+
+## Think Before Coding
+
+- State assumptions before implementation when they affect the path.
+- Do not hide confusion. If multiple interpretations exist, name them.
+- If a simpler approach exists, say so and use it unless there is a concrete reason not to.
+- Push back when the request implies unnecessary scope, risky data exposure, or brittle architecture.
+
+## Simplicity First
+
+- Write the minimum code that solves the problem.
+- No features beyond what was asked.
+- No abstractions or configurability for single-use code.
+- If a change feels overbuilt, make it smaller before handoff.
+
+## Surgical Changes
+
+- Touch only files required by the current request.
+- Match existing style.
+- Do not refactor adjacent code unless the current change requires it.
+- Every changed line must trace to the request, a verified bug, or cleanup caused by this change.
+
+## Goal-Driven Execution
+
+- Convert vague tasks into verifiable success criteria before editing.
+- For bugs, prefer a check that reproduces the failure before fixing it.
+- Run the narrowest useful proof before committing or pushing.
+
+## Publish Path
+
+- Publish mode is auto unless the user explicitly asks for local-only work.
+- Start by checking branch and dirty state.
+- Preserve user or other-agent changes; do not revert unrelated work.
+- Commit and push each finished repo-visible change after verification.
+- Prefer one commit per finished file; group files only when inseparable.
+- Keep private, scratch, partial, failing, and unverified work out of commits.
 EOF
   fi
 
@@ -439,7 +473,10 @@ This is the Codex-first workflow source for "$project_name".
 ## Ship Path
 
 - Follow the repo-local AGENTS.md and the selected GitHub target from the launcher.
+- Publish mode is auto unless the user explicitly asks for local-only work.
 - Commit and push only verified repo-visible work.
+- Prefer focused commits; use one commit per finished file when practical, and
+  group files only when inseparable.
 - Keep private, scratch, partial, failing, and unverified work out of the publish path.
 EOF
   fi
