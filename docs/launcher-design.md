@@ -34,6 +34,8 @@ Deterministic profile launches remain available for scripted paths such as
 - Dynamic launches should infer only conservative defaults.
 - Role tabs should open idle by default to avoid accidental background work.
 - The selected target and GitHub repo must be visible in every role tab.
+- Keep the main cmux workspace tabbed by default so one agent surface is visible
+  at a time and Feed can use the right sidebar.
 
 ## Incorporated Patterns
 
@@ -69,7 +71,8 @@ When no profile matches:
 - `ship`: branch/origin/commit/push hygiene
 
 The dynamic cockpit can include a dev server and browser preview only when the
-repo clearly exposes a standard `dev` command and likely local URL.
+repo clearly exposes a standard `dev` command and likely local URL. Those open
+as tabs in the same pane rather than as default splits.
 
 ## Sources
 

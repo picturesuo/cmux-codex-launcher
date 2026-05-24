@@ -43,6 +43,7 @@ The user-facing cmux action and `/Users/bensuo/codex-launchpad.sh` default to
 - `CML_APPROVAL`
 - `CML_OPEN_CODEX_APP`
 - `CML_AUTOSTART_ROLES`
+- `CML_SHOW_FEED_SIDEBAR`
 - `CML_SELECTED_TARGET`
 - `CML_GITHUB_REPO`
 

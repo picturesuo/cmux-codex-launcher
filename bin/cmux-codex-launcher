@@ -943,7 +943,7 @@ build_layout() {
   local session_file=$3
   local plan_doc=${CML_PLAN_DOC:-}
   local q_project_dir q_session_file q_model q_config q_sandbox q_approval q_plan_path
-  local plan_command role role_prompt role_command dev_command right_surface left_json right_json surfaces_json
+  local plan_command role role_prompt role_command dev_command surfaces_json
   local -a surfaces=()
 
   q_project_dir="$(shell_quote "$project_dir")"
@@ -975,18 +975,12 @@ build_layout() {
   if [ -n "$dev_command" ]; then
     surfaces+=("$(terminal_surface "dev-server" "$dev_command")")
   fi
+  if [ -n "${CML_PREVIEW_URL:-}" ]; then
+    surfaces+=("$(browser_surface "preview" "$CML_PREVIEW_URL")")
+  fi
 
   surfaces_json="$(join_comma "${surfaces[@]}")"
-  left_json="{\"pane\":{\"surfaces\":[$surfaces_json]}}"
-
-  if [ -n "${CML_PREVIEW_URL:-}" ]; then
-    right_surface="$(browser_surface "preview" "$CML_PREVIEW_URL")"
-  else
-    right_surface="$(terminal_surface "notes" "printf 'No preview URL configured for $project_name.\\n'; exec \"\${SHELL:-/bin/zsh}\" -l")"
-  fi
-  right_json="{\"pane\":{\"surfaces\":[$right_surface]}}"
-
-  printf '{"direction":"horizontal","split":0.58,"children":[%s,%s]}' "$left_json" "$right_json"
+  printf '{"pane":{"surfaces":[%s]}}' "$surfaces_json"
 }
 
 load_last_state() {
@@ -1010,10 +1004,19 @@ save_last_state() {
 open_codex_app() {
   local project_dir=$1
   if command -v codex >/dev/null 2>&1; then
-    codex app "$project_dir" >/dev/null 2>&1 &
+    codex app \
+      -c "model=\"$CML_CODEX_MODEL\"" \
+      -c "model_reasoning_effort=\"$CML_CODEX_EFFORT\"" \
+      "$project_dir" >/dev/null 2>&1 &
     return 0
   fi
   open -a Codex "$project_dir" >/dev/null 2>&1 &
+}
+
+show_feed_sidebar() {
+  [ "${CML_SHOW_FEED_SIDEBAR:-true}" = "true" ] || return 0
+  command -v cmux >/dev/null 2>&1 || return 0
+  cmux right-sidebar set feed --no-focus >/dev/null 2>&1 || true
 }
 
 while [ "$#" -gt 0 ]; do
@@ -1132,6 +1135,7 @@ CML_SANDBOX="${CML_SANDBOX:-workspace-write}"
 CML_APPROVAL="${CML_APPROVAL:-on-request}"
 CML_OPEN_CODEX_APP="${OPEN_CODEX_APP_OVERRIDE:-${CML_OPEN_CODEX_APP:-true}}"
 CML_AUTOSTART_ROLES="${AUTOSTART_ROLES_OVERRIDE:-${CML_AUTOSTART_ROLES:-false}}"
+CML_SHOW_FEED_SIDEBAR="${CML_SHOW_FEED_SIDEBAR:-true}"
 
 if [ "${#CML_ROLE_NAMES[@]}" -eq 0 ]; then
   CML_ROLE_NAMES=("lead" "build" "verify")
@@ -1159,6 +1163,7 @@ workspace: $CML_WORKSPACE_NAME
 codex_app: $CML_OPEN_CODEX_APP
 cmux_workspace: $CREATE_CMUX
 autostart_roles: $CML_AUTOSTART_ROLES
+feed_sidebar: $CML_SHOW_FEED_SIDEBAR
 model: $CML_CODEX_MODEL
 effort: $CML_CODEX_EFFORT
 sandbox: $CML_SANDBOX
@@ -1192,4 +1197,5 @@ if [ "$CREATE_CMUX" -eq 1 ]; then
     --cwd "$CML_PROJECT_DIR" \
     --layout "$LAYOUT_JSON" \
     --focus "$FOCUS_WORKSPACE"
+  show_feed_sidebar
 fi

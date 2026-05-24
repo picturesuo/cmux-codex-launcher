@@ -56,8 +56,9 @@ For a profile, the launcher can open:
 - a cmux workspace with named Codex CLI tabs
 - a plan/docs terminal with the exact markdown viewer command
 - an optional dev-server tab
-- an optional browser preview pane
-- the Codex desktop app for the same workspace path
+- an optional browser preview tab
+- the cmux Feed in the right sidebar for agent messages and approvals
+- the Codex desktop app for the same workspace path and model settings
 
 By default the role tabs open Codex CLI idle. That keeps the workspace ready
 without letting background agents run setup commands or create recursive cmux
@@ -89,6 +90,7 @@ CML_EXTRA_DOCS=("docs/yc-demo-coding-brief.md" "docs/yc-demo-runbook.md")
 CML_CODEX_EFFORT="xhigh"
 CML_ROLE_NAMES=("lead" "create-ui" "brain-evidence" "learn-canvas" "export-verify")
 CML_AUTOSTART_ROLES="false"
+CML_SHOW_FEED_SIDEBAR="true"
 ```
 
 Do not put API keys, database passwords, OAuth secrets, or tokens in a profile.
