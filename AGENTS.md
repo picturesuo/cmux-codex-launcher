@@ -13,6 +13,7 @@ preview/log surfaces, shared context, and a clear ship path.
 - `README.md`: user-facing behavior and commands.
 - `tools.md`: exact local commands.
 - `docs/launcher-design.md`: architecture and external references.
+- `docs/codex-app-workflow.md`: Codex-app-first workflow and seeded files.
 - `docs/cmux-cockpit-loadout.md`: one-click cmux loadout and success criteria.
 - `docs/codex-terminal-profile.md`: Codex reasoning defaults and when to use medium, high, or xhigh.
 - `docs/project-signals.md`: quota, repo health, summarize, gitcrawl, and dashboard integration.
