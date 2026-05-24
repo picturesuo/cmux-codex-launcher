@@ -22,6 +22,9 @@ Good launcher behavior is explicit:
 - shared context captures current state
 - shipping rules come from the target repo
 
+`--codex` uses the same resolution and shared-context contract, but opens the
+Codex desktop app as the main surface and skips cmux.
+
 ## Launch Loop
 
 1. Resolve target from `--choose`, a profile, explicit args, or last state.
@@ -32,6 +35,10 @@ Good launcher behavior is explicit:
 5. Open role workspaces idle unless `--autostart-roles` is explicit.
 6. Start dev server and preview only when the profile or project shape gives a
    reasonable command and URL.
+
+Codex-app-first launches use the same first four steps, then seed missing
+target-repo workflow files and open the Codex desktop app instead of creating
+cmux role workspaces.
 
 Each role workspace should stay visually simple: one role-specific Codex
 surface and, when configured, one preview browser surface. Plan docs and helper
