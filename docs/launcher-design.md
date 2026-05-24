@@ -20,10 +20,12 @@ Deterministic profile launches remain available for scripted paths such as
 
 ## Current Workflow Split
 
-- Codex Desktop: reading, learning, long-context discussion, Appshots, external
-  app context, and product thinking.
-- cmux + Codex CLI: coding workstreams, preview, logs, verification, and
-  shipping hygiene.
+- Codex Desktop first: everyday project work when the user wants the Codex app
+  to act like the terminal, with repo-local Markdown files, shared context, and
+  Codex config doing the routing.
+- cmux + Codex CLI: attended parallel workstreams, previews, logs,
+  verification, and shipping hygiene when visible terminal panes are worth the
+  extra machinery.
 
 ## Design Principles
 
@@ -34,6 +36,8 @@ Deterministic profile launches remain available for scripted paths such as
 - Dynamic launches should infer only conservative defaults.
 - Role tabs should open idle by default to avoid accidental background work.
 - The selected target and GitHub repo must be visible in every role tab.
+- Codex-app-first launches should seed only missing workflow files and never
+  overwrite a target repo's existing instructions.
 - Keep each role in a separate cmux workspace by default so the left sidebar is
   the role switcher, one agent is visible at a time, and unread notifications
   mark the workspace that needs attention.
@@ -67,6 +71,18 @@ Deterministic profile launches remain available for scripted paths such as
 6. Write selected target and GitHub repo into shared context.
 7. Never store secrets or credentials in generated files.
 
+`--codex` should:
+
+1. Use the same chooser, profile, project override, and GitHub confirmation path.
+2. Open Codex Desktop on the resolved checkout.
+3. Skip cmux workspace creation.
+4. Create only missing target-repo workflow files:
+   `AGENTS.md`, `docs/agent-workflow.md`, `docs/queue.md`,
+   `docs/knowledge.md`, and `.codex/config.toml`.
+5. Leave existing target repo workflow files untouched.
+6. Support `--reset-task` for clearing only the mutable shared-context task
+   block.
+
 ## Dynamic Cockpit Shape
 
 When no profile matches:
@@ -92,6 +108,7 @@ the right half of each role workspace rather than as another tab or pane pile.
 - Simon Willison on parallel coding agents: https://simonwillison.net/2025/Oct/5/parallel-coding-agents/
 - OpenAI Codex best practices: https://developers.openai.com/codex/learn/best-practices
 - OpenAI Codex config reference: https://developers.openai.com/codex/config-reference
+- OpenAI Codex config sample: https://developers.openai.com/codex/config-sample
 - cmux custom commands: https://cmux.com/docs/custom-commands
 - cmux homepage community workflow notes: https://cmux.com/
 - Peter Steinberger May 23, 2026 cmux/Codex split snapshot: https://digg.com/ai/j5do9ink
