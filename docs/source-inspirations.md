@@ -41,6 +41,8 @@ Launcher adaptation:
 
 - `AGENTS.md` and `docs/*.md` define the agent program.
 - `bin/cmux-codex-launcher` is the runtime harness.
+- `--codex` seeds a small repo-local Markdown program for the Codex app when a
+  target repo is missing one.
 - Dry runs and smoke tests are the fixed evaluation loop.
 - Dynamic roles get scoped surfaces and verification duties.
 
@@ -75,6 +77,8 @@ Launcher adaptation:
 - `AGENTS.md` holds hard rules only.
 - `tools.md` is the command catalog.
 - Workflow detail lives in focused docs.
+- Codex-app-first launches preserve the same publish and shared-context
+  workflow without requiring a Ghostty or cmux pane grid.
 - Finished repo-visible file changes are committed and pushed one file at a time
   by default.
 - Shared context captures current task state instead of bloating prompts.
