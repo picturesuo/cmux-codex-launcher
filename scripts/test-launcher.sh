@@ -32,6 +32,16 @@ case "$dry_run" in
 esac
 
 case "$dry_run" in
+  *"effort: medium"* ) ;;
+  * ) printf 'dry run did not default interactive Codex effort to medium\n' >&2; exit 1 ;;
+esac
+
+case "$dry_run" in
+  *"plan_effort: high"* ) ;;
+  * ) printf 'dry run did not default Plan mode effort to high\n' >&2; exit 1 ;;
+esac
+
+case "$dry_run" in
   *'"name":"Penny: lead"'* ) ;;
   * ) printf 'dry run did not create a left-sidebar lead workspace\n' >&2; exit 1 ;;
 esac
@@ -44,6 +54,13 @@ esac
 case "$dry_run" in
   *'"name":"plan"'*|*"cmux markdown open"* )
     printf 'sidebar role layout should not add plan/doc helper tabs\n' >&2
+    exit 1
+    ;;
+esac
+
+case "$dry_run" in
+  *'model_reasoning_effort="xhigh"'*|*"gpt-5.5 xhigh"* )
+    printf 'launcher should not make xhigh the default reasoning profile\n' >&2
     exit 1
     ;;
 esac

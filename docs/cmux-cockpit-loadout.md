@@ -42,6 +42,7 @@ For a profiled project such as Penny:
 - left sidebar: one workspace per role, such as `Penny: lead` and
   `Penny: create-ui`
 - role workspace: Codex CLI on the left, preview browser on the right
+- reasoning: terminal interaction at `medium`, Plan mode at `high`
 - dev server: separate workspace
 - shared context: `~/.codex/cmux-codex-launcher/<project>-shared-context.md`
 - Codex desktop app: opened on the same checkout for reading, learning, and

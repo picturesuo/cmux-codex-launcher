@@ -50,11 +50,14 @@ Source:
 
 - https://github.com/steipete/agent-scripts/blob/main/AGENTS.MD
 - https://steipete.me/posts/just-talk-to-it
+- https://zenn.dev/seyz/articles/20260308-steipete-codex-how-to
 - https://www.skills.sh/steipete/clawdis/tmux
 
 Useful patterns:
 
 - Keep global agent rules terse.
+- Use `medium` for everyday Codex coding and reserve `high` for complex design
+  or architecture passes; avoid making `xhigh` the default.
 - Put routing, secrets, git, release, and CI behavior where agents will see it.
 - Prefer exact local commands over generic advice.
 - Use explicit publish policy; in this repo, publish mode is now `auto` unless
@@ -75,6 +78,8 @@ Launcher adaptation:
 - Finished repo-visible file changes are committed and pushed one file at a time
   by default.
 - Shared context captures current task state instead of bloating prompts.
+- Launcher profiles set Codex terminal reasoning to `medium` and Plan mode to
+  `high`.
 
 ## Simon Willison Parallel Agents
 

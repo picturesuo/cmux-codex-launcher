@@ -140,6 +140,16 @@ cmux reload-config
 cmux markdown open docs/penny-create-operating-outline.md --focus false
 ```
 
+### Codex reasoning defaults
+
+```bash
+rg -n "CML_CODEX_(PLAN_)?EFFORT|plan_effort|model_reasoning_effort" profiles bin docs README.md
+bin/cmux-codex-launcher --profile penny --dry-run
+```
+
+Expected posture: interactive Codex terminal effort is `medium`, Plan mode is
+`high`, and `xhigh` is opt-in only.
+
 ## GitHub
 
 ### `gh`

@@ -851,7 +851,8 @@ apply_dynamic_profile() {
   CML_DEV_COMMAND="${DEV_COMMAND_OVERRIDE:-$dev_command}"
   CML_PLAN_DOC="README.md"
   CML_CODEX_MODEL="gpt-5.5"
-  CML_CODEX_EFFORT="xhigh"
+  CML_CODEX_EFFORT="medium"
+  CML_CODEX_PLAN_EFFORT="high"
   CML_SANDBOX="danger-full-access"
   CML_APPROVAL="never"
   CML_OPEN_CODEX_APP="true"
@@ -1011,21 +1012,22 @@ role_surface_for() {
   local project_name=$2
   local project_dir=$3
   local session_file=$4
-  local q_project_dir q_session_file q_model q_config q_sandbox q_approval
+  local q_project_dir q_session_file q_model q_config q_plan_config q_sandbox q_approval
   local role_prompt role_command
 
   q_project_dir="$(shell_quote "$project_dir")"
   q_session_file="$(shell_quote "$session_file")"
   q_model="$(shell_quote "$CML_CODEX_MODEL")"
   q_config="$(shell_quote "model_reasoning_effort=\"$CML_CODEX_EFFORT\"")"
+  q_plan_config="$(shell_quote "plan_mode_reasoning_effort=\"$CML_CODEX_PLAN_EFFORT\"")"
   q_sandbox="$(shell_quote "$CML_SANDBOX")"
   q_approval="$(shell_quote "$CML_APPROVAL")"
 
   role_prompt="$(build_role_prompt "$role" "$project_name" "$project_dir" "$session_file")"
   if [ "$CML_AUTOSTART_ROLES" = "true" ]; then
-    role_command="codex -C $q_project_dir -m $q_model -c $q_config -s $q_sandbox -a $q_approval $(shell_quote "$role_prompt")"
+    role_command="codex -C $q_project_dir -m $q_model -c $q_config -c $q_plan_config -s $q_sandbox -a $q_approval $(shell_quote "$role_prompt")"
   else
-    role_command="printf 'Role: %s\\nProject: %s\\nShared context: %s\\nSelected target: %s\\nGitHub target: %s\\n\\nCodex opens idle here to avoid unintended background work. Paste the task when you want this role to start.\\n\\n' $(shell_quote "$role") $(shell_quote "$project_dir") $q_session_file $(shell_quote "${CML_SELECTED_TARGET:-unspecified}") $(shell_quote "${CML_GITHUB_REPO:-use target repo origin}"); exec codex -C $q_project_dir -m $q_model -c $q_config -s $q_sandbox -a $q_approval"
+    role_command="printf 'Role: %s\\nProject: %s\\nShared context: %s\\nSelected target: %s\\nGitHub target: %s\\nReasoning: %s\\nPlan mode: %s\\n\\nCodex opens idle here to avoid unintended background work. Paste the task when you want this role to start.\\n\\n' $(shell_quote "$role") $(shell_quote "$project_dir") $q_session_file $(shell_quote "${CML_SELECTED_TARGET:-unspecified}") $(shell_quote "${CML_GITHUB_REPO:-use target repo origin}") $(shell_quote "$CML_CODEX_EFFORT") $(shell_quote "$CML_CODEX_PLAN_EFFORT"); exec codex -C $q_project_dir -m $q_model -c $q_config -c $q_plan_config -s $q_sandbox -a $q_approval"
   fi
 
   terminal_surface "$role" "$role_command"
@@ -1151,6 +1153,7 @@ open_codex_app() {
     codex app \
       -c "model=\"$CML_CODEX_MODEL\"" \
       -c "model_reasoning_effort=\"$CML_CODEX_EFFORT\"" \
+      -c "plan_mode_reasoning_effort=\"$CML_CODEX_PLAN_EFFORT\"" \
       "$project_dir" >/dev/null 2>&1 &
     return 0
   fi
@@ -1276,6 +1279,7 @@ CML_PLAN_DOC="${CML_PLAN_DOC:-README.md}"
 CML_ROLE_PANE_SPLIT="${CML_ROLE_PANE_SPLIT:-0.5}"
 CML_CODEX_MODEL="${CML_CODEX_MODEL:-gpt-5.5}"
 CML_CODEX_EFFORT="${CML_CODEX_EFFORT:-medium}"
+CML_CODEX_PLAN_EFFORT="${CML_CODEX_PLAN_EFFORT:-high}"
 CML_SANDBOX="${CML_SANDBOX:-workspace-write}"
 CML_APPROVAL="${CML_APPROVAL:-on-request}"
 CML_OPEN_CODEX_APP="${OPEN_CODEX_APP_OVERRIDE:-${CML_OPEN_CODEX_APP:-true}}"
@@ -1317,6 +1321,7 @@ feed_sidebar: $CML_SHOW_FEED_SIDEBAR
 workspace_mode: $CML_WORKSPACE_MODE
 model: $CML_CODEX_MODEL
 effort: $CML_CODEX_EFFORT
+plan_effort: $CML_CODEX_PLAN_EFFORT
 sandbox: $CML_SANDBOX
 approval: $CML_APPROVAL
 preview: ${CML_PREVIEW_URL:-none}

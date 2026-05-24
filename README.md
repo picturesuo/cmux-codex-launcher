@@ -88,7 +88,8 @@ CML_PREVIEW_URL="http://localhost:3007"
 CML_DEV_COMMAND='if lsof -nP -iTCP:3007 -sTCP:LISTEN >/dev/null 2>&1; then printf "Penny dev server is already running at http://localhost:3007\n"; exec "${SHELL:-/bin/zsh}" -l; fi; set -a; [ -f .env.local ] && source .env.local; set +a; PENNY_SKIP_DATABASE_PREP=true PENNY_AUTH_MODE=dev PORT=3007 pnpm dev'
 CML_PLAN_DOC="docs/penny-create-operating-outline.md"
 CML_EXTRA_DOCS=("docs/yc-demo-coding-brief.md" "docs/yc-demo-runbook.md")
-CML_CODEX_EFFORT="xhigh"
+CML_CODEX_EFFORT="medium"
+CML_CODEX_PLAN_EFFORT="high"
 CML_ROLE_NAMES=("lead" "create-ui" "brain-evidence" "learn-canvas" "export-verify")
 CML_ROLE_PANE_SPLIT="0.5"
 CML_AUTOSTART_ROLES="false"
@@ -128,4 +129,6 @@ The implementation follows current cmux patterns:
 
 See [docs/launcher-design.md](docs/launcher-design.md) and
 [docs/cmux-cockpit-loadout.md](docs/cmux-cockpit-loadout.md) for the design
-notes, success criteria, and external references.
+notes, success criteria, and external references. See
+[docs/codex-terminal-profile.md](docs/codex-terminal-profile.md) for the
+reasoning-effort defaults.

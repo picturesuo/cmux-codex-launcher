@@ -40,6 +40,7 @@ The user-facing cmux action and `/Users/bensuo/codex-launchpad.sh` default to
 - `CML_ROLE_PANE_SPLIT`
 - `CML_CODEX_MODEL`
 - `CML_CODEX_EFFORT`
+- `CML_CODEX_PLAN_EFFORT`
 - `CML_SANDBOX`
 - `CML_APPROVAL`
 - `CML_OPEN_CODEX_APP`
@@ -70,6 +71,11 @@ when the preview should get roughly 60% of the workspace width.
 
 `CML_SELECTED_TARGET` and `CML_GITHUB_REPO` are normally set by the chooser.
 Profiles do not need to define them.
+
+`CML_CODEX_EFFORT=medium` is the default for interactive terminal sessions.
+`CML_CODEX_PLAN_EFFORT=high` is the default for `/plan` and similar design
+passes. Use `xhigh` only as an explicit one-off override, not as a profile
+default.
 
 ## Safety
 

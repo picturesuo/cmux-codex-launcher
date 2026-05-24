@@ -15,7 +15,7 @@ read_when:
 - `user`: After project selection, the chooser should ask for an explicit yes/no confirmation before using the inferred GitHub contribution target.
 - `user`: Role workspaces should stay clean: left sidebar role entry, role-specific Codex surface, and preview surface only. Avoid hidden plan/doc/helper tabs inside each role.
 - `user`: Deterministic profile launches should still exist for scripts and saved project commands.
-- `user`: Penny launcher tabs should use Codex reasoning effort `xhigh` when the user says "extra high."
+- `user`: Penny launcher tabs should default to Codex reasoning effort `medium` and Plan mode `high`; use `xhigh` only when explicitly requested for an unusually hard run.
 - `user`: Keep role prompts specific and avoid loading every tab with irrelevant context.
 - `user`: Use safe fixtures and explicit docs for Penny demo work; avoid live connector fragility in launcher prompts.
 - `user`: Agent guidance should be explicit and non-ambiguous: think before coding, keep changes simple, edit surgically, and define verifiable success criteria before implementation.
@@ -52,7 +52,7 @@ read_when:
 - `penny`: Project path is `/Users/bensuo/Desktop/penny`.
 - `penny`: Workspace name is `Penny Create`.
 - `penny`: Preview URL is `http://localhost:3007`.
-- `penny`: Codex effort is `xhigh`.
+- `penny`: Codex interactive effort is `medium`; Plan mode effort is `high`.
 - `penny`: Dev command sources `.env.local` inside Penny and runs `PORT=3007 pnpm dev`.
 - `penny`: Plan doc is `docs/penny-create-operating-outline.md`.
 - `penny`: Extra read-first docs are `docs/yc-demo-coding-brief.md` and `docs/yc-demo-runbook.md`.

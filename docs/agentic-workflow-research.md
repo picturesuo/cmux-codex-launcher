@@ -57,6 +57,7 @@ Sources:
 - https://steipete.me/posts/just-talk-to-it
 - https://github.com/steipete/agent-scripts/blob/main/AGENTS.MD
 - https://www.skills.sh/steipete/clawdis/tmux
+- https://zenn.dev/seyz/articles/20260308-steipete-codex-how-to
 - https://x.com/steipete/status/1977771686176174352
 - https://x.com/steipete/status/1977175451408990379
 - https://x.com/steipete/status/1977745596380279006
@@ -65,6 +66,9 @@ Sources:
 Useful details:
 
 - Codex CLI can be the daily driver, with several sessions running in parallel.
+- Public summaries of Steinberger's current Codex use describe `medium` as the
+  everyday coding default, `high` for complex architecture/design, and `xhigh`
+  as generally not worth using by default.
 - Keep agents in visible terminal panes when context and steering matter.
 - Use atomic commits so each agent lands only its own files.
 - Think in blast radius: split work when file overlap or reset risk gets high.
@@ -97,6 +101,8 @@ Launcher implication:
   handled by the one-click launcher.
 - The `ship` role is first-class because clean commits and pushes are part of
   the workflow, not an afterthought.
+- Launcher-created terminals should therefore use `medium` for normal
+  interaction and `high` for Plan mode, not blanket `xhigh`.
 
 ## OpenAI Codex Pattern
 

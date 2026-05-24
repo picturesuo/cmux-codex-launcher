@@ -52,6 +52,8 @@ Deterministic profile launches remain available for scripted paths such as
   palette entries, and workspace layouts.
 - cmux CLI: `new-workspace --layout` for scripted split layouts.
 - Codex CLI: `codex app <path>` for opening Codex Desktop on macOS.
+- Codex reasoning: interactive terminal sessions default to `medium`, while
+  Plan mode defaults to `high` for architecture and design passes.
 
 ## Chooser Contract
 
@@ -85,9 +87,11 @@ the right half of each role workspace rather than as another tab or pane pile.
 - Karpathy `program.md`: https://github.com/karpathy/autoresearch/blob/master/program.md
 - Steinberger `agent-scripts` AGENTS: https://github.com/steipete/agent-scripts/blob/main/AGENTS.MD
 - Steinberger `Just Talk To It`: https://steipete.me/posts/just-talk-to-it
+- Steinberger Codex app summary: https://zenn.dev/seyz/articles/20260308-steipete-codex-how-to
 - Simon Willison on Peter's Codex CLI workflow: https://simonwillison.net/2025/Oct/14/agentic-engineering/
 - Simon Willison on parallel coding agents: https://simonwillison.net/2025/Oct/5/parallel-coding-agents/
 - OpenAI Codex best practices: https://developers.openai.com/codex/learn/best-practices
+- OpenAI Codex config reference: https://developers.openai.com/codex/config-reference
 - cmux custom commands: https://cmux.com/docs/custom-commands
 - cmux homepage community workflow notes: https://cmux.com/
 - Peter Steinberger May 23, 2026 cmux/Codex split snapshot: https://digg.com/ai/j5do9ink
