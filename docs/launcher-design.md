@@ -10,9 +10,10 @@ read_when:
 
 Open a coding cockpit from a fuzzy human hint.
 
-The launcher should ask what file/app/repo the user is working on, find the
-matching local checkout or GitHub repo, confirm the GitHub contribution target,
-then open cmux and Codex Desktop against the same project path.
+The launcher should ask what project, file, app, folder, or GitHub repo the
+user is working on, find the matching local checkout or GitHub repo, confirm
+the GitHub contribution target, then open cmux and Codex Desktop against the
+same project path.
 
 Deterministic profile launches remain available for scripted paths such as
 `--profile penny`.
@@ -39,7 +40,8 @@ Deterministic profile launches remain available for scripted paths such as
 - Karpathy-style loop: small harness, explicit editable surface, fixed
   evaluation, keep/discard based on measured output.
 - Steinberger-style AGENTS: terse hard rules, strong routing, secrets hygiene,
-  push only on request, and practical git constraints.
+  atomic publish boundaries, and practical git constraints. This repo adapts
+  that style to the user's requested auto commit/push workflow.
 - cmux custom commands: project-local `.cmux/cmux.json`, actions, command
   palette entries, and workspace layouts.
 - cmux CLI: `new-workspace --layout` for scripted split layouts.
@@ -49,7 +51,7 @@ Deterministic profile launches remain available for scripted paths such as
 
 `--choose` should:
 
-1. Ask for a file, app, folder, or GitHub repo.
+1. Ask for a project, file, app, folder, or GitHub repo.
 2. Search local git checkouts, matching files, explicit paths, and GitHub repos.
 3. Prefer an existing profile when the resolved checkout matches one.
 4. Clone GitHub-only matches under `CMUX_CODEX_PROJECTS_DIR` or `~/Desktop`.
@@ -74,7 +76,10 @@ repo clearly exposes a standard `dev` command and likely local URL.
 - Karpathy `autoresearch`: https://github.com/karpathy/autoresearch
 - Karpathy `program.md`: https://github.com/karpathy/autoresearch/blob/master/program.md
 - Steinberger `agent-scripts` AGENTS: https://github.com/steipete/agent-scripts/blob/main/AGENTS.MD
+- Steinberger `Just Talk To It`: https://steipete.me/posts/just-talk-to-it
+- Simon Willison on Peter's Codex CLI workflow: https://simonwillison.net/2025/Oct/14/agentic-engineering/
+- Simon Willison on parallel coding agents: https://simonwillison.net/2025/Oct/5/parallel-coding-agents/
+- OpenAI Codex best practices: https://developers.openai.com/codex/learn/best-practices
 - cmux custom commands: https://cmux.com/docs/custom-commands
 - cmux workspace CLI docs: https://manaflow-ai-cmux.mintlify.app/cli/workspaces
 - Codex CLI reference: https://developers.openai.com/codex/cli/reference
-
