@@ -50,6 +50,7 @@ Source:
 
 - https://github.com/steipete/agent-scripts/blob/main/AGENTS.MD
 - https://steipete.me/posts/just-talk-to-it
+- https://www.skills.sh/steipete/clawdis/tmux
 
 Useful patterns:
 
@@ -62,6 +63,8 @@ Useful patterns:
 - Keep parallel agent sessions visible in terminal panes when steering matters.
 - Prefer lightweight CLIs such as `gh` over context-heavy tool plumbing when the
   CLI can answer the same question.
+- Use a terminal multiplexer as the control surface for long-running interactive
+  agent sessions.
 - Use screenshots as fast UI context, then verify with tests or runtime checks.
 
 Launcher adaptation:
