@@ -50,6 +50,18 @@ CMUX_CODEX_PROJECTS_DIR="$HOME/Projects" bin/cmux-codex-launcher --choose
 bash scripts/test-launcher.sh
 ```
 
+Ten-pass launcher verification:
+
+```bash
+for i in 1 2 3 4 5 6 7 8 9 10; do
+  printf 'pass %s\n' "$i"
+  bash scripts/test-launcher.sh >/dev/null
+  bin/cmux-codex-launcher --choose --query penny --dry-run >/dev/null
+  bin/cmux-codex-launcher --choose --query pnny --dry-run >/dev/null
+  CMUX_CODEX_SEARCH_ROOTS="$PWD" bin/cmux-codex-launcher --choose --query 'lauch design' --dry-run >/dev/null
+done
+```
+
 ### `scripts/doctor.sh`
 
 - Purpose: check `cmux`, `codex`, `git`, `gh`, shell syntax, cmux config validity, and Penny profile resolution.
