@@ -41,7 +41,7 @@ Options:
   --workspace-name <name> Override the cmux workspace name
   --preview-url <url>     Override the browser preview URL
   --dev-command <command> Override the dev-server terminal command
-  --choose                Ask for a file/app/repo and GitHub target, then launch
+  --choose                Ask for a project/file/app/repo and GitHub target, then launch
   --query <text>          Seed --choose search; selects the best match without a TTY
   --github <repo|url>     Override the GitHub repo for --choose
   --no-clone              Do not clone a GitHub-only match
@@ -876,7 +876,7 @@ run_picker() {
 
   query="$PICKER_QUERY"
   if [ -z "$query" ]; then
-    query="$(prompt_value "What file, app, folder, or GitHub repo are you working on?" "")"
+    query="$(prompt_value "What project, file, app, folder, or GitHub repo are you working on?" "")"
   fi
   [ -n "$query" ] || die "nothing to launch"
 
