@@ -49,4 +49,11 @@ case "$dynamic_dry_run" in
   * ) printf 'dynamic picker did not include shipping role\n' >&2; exit 1 ;;
 esac
 
+file_dry_run="$(CMUX_CODEX_SEARCH_ROOTS="$ROOT" "$ROOT/bin/cmux-codex-launcher" --choose --query launcher-design --dry-run)"
+
+case "$file_dry_run" in
+  *"selected_target: $ROOT/docs/launcher-design.md"* ) ;;
+  * ) printf 'file picker did not resolve launcher-design doc\n' >&2; exit 1 ;;
+esac
+
 printf 'ok: launcher smoke tests passed\n'
