@@ -58,6 +58,7 @@ Desktop, and skips cmux. The seeded target-repo files are:
 ```text
 AGENTS.md
 docs/agent-workflow.md
+docs/workflow-packaging-audit.md
 docs/queue.md
 docs/knowledge.md
 .codex/config.toml
@@ -163,7 +164,8 @@ bin/cmux-codex-launcher --autostart-roles --profile penny
 The implementation follows Codex and cmux patterns:
 
 - repo-scoped `.codex/config.toml` plus small Markdown files for durable
-  Codex-app behavior
+  Codex-app behavior, including a workflow-packaging audit for deciding when
+  repeated work should become a skill, subagent, automation, extension, or skip
 - project-local `.cmux/cmux.json` commands and actions when a repo should carry
   its own layout
 - a temporary chooser workspace for the plus button; after the chooser creates

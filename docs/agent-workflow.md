@@ -40,6 +40,11 @@ Codex-app-first launches use the same first four steps, then seed missing
 target-repo workflow files and open the Codex desktop app instead of creating
 cmux role workspaces.
 
+Use `docs/workflow-packaging-audit.md` when the user asks whether repeated work
+should become a skill, subagent, automation, or other reusable asset. The audit
+must inspect existing assets first, shortlist candidates with evidence, and
+create only high-confidence missing items.
+
 Each role workspace should stay visually simple: one role-specific Codex
 surface and, when configured, one preview browser surface. Plan docs and helper
 surfaces belong in docs, shared context, or separate workspaces, not hidden

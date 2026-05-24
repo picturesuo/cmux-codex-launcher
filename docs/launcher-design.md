@@ -77,7 +77,8 @@ Deterministic profile launches remain available for scripted paths such as
 2. Open Codex Desktop on the resolved checkout.
 3. Skip cmux workspace creation.
 4. Create only missing target-repo workflow files:
-   `AGENTS.md`, `docs/agent-workflow.md`, `docs/queue.md`,
+   `AGENTS.md`, `docs/agent-workflow.md`,
+   `docs/workflow-packaging-audit.md`, `docs/queue.md`,
    `docs/knowledge.md`, and `.codex/config.toml`.
 5. Leave existing target repo workflow files untouched.
 6. Support `--reset-task` for clearing only the mutable shared-context task
@@ -107,6 +108,10 @@ the right half of each role workspace rather than as another tab or pane pile.
 - Simon Willison on Peter's Codex CLI workflow: https://simonwillison.net/2025/Oct/14/agentic-engineering/
 - Simon Willison on parallel coding agents: https://simonwillison.net/2025/Oct/5/parallel-coding-agents/
 - OpenAI Codex best practices: https://developers.openai.com/codex/learn/best-practices
+- OpenAI Codex Memories: https://developers.openai.com/codex/memories
+- OpenAI Codex Chronicle: https://developers.openai.com/codex/memories/chronicle
+- OpenAI Codex app announcement: https://openai.com/index/introducing-the-codex-app/
+- OpenAI Codex automations academy: https://openai.com/academy/codex-automations/
 - OpenAI Codex config reference: https://developers.openai.com/codex/config-reference
 - OpenAI Codex config sample: https://developers.openai.com/codex/config-sample
 - cmux custom commands: https://cmux.com/docs/custom-commands

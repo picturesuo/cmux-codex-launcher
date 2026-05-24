@@ -38,8 +38,9 @@ bin/cmux-codex-launcher --codex --no-app --project /tmp/repo --name "Seed Only"
 ```
 
 `--codex` opens Codex Desktop, skips cmux, and creates missing target-repo
-workflow files: `AGENTS.md`, `docs/agent-workflow.md`, `docs/queue.md`,
-`docs/knowledge.md`, and `.codex/config.toml`.
+workflow files: `AGENTS.md`, `docs/agent-workflow.md`,
+`docs/workflow-packaging-audit.md`, `docs/queue.md`, `docs/knowledge.md`, and
+`.codex/config.toml`.
 
 Environment overrides:
 

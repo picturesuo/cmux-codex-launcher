@@ -14,6 +14,7 @@ preview/log surfaces, shared context, and a clear ship path.
 - `tools.md`: exact local commands.
 - `docs/launcher-design.md`: architecture and external references.
 - `docs/codex-app-workflow.md`: Codex-app-first workflow and seeded files.
+- `docs/workflow-packaging-audit.md`: when to create skills, subagents, automations, or skips.
 - `docs/cmux-cockpit-loadout.md`: one-click cmux loadout and success criteria.
 - `docs/codex-terminal-profile.md`: Codex reasoning defaults and when to use medium, high, or xhigh.
 - `docs/project-signals.md`: quota, repo health, summarize, gitcrawl, and dashboard integration.

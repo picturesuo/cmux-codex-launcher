@@ -110,6 +110,48 @@ Launcher adaptation:
 - Preserve useful findings in shared context or docs so future prompts start
   with better local knowledge.
 
+## OpenAI Codex App Workflows
+
+Sources:
+
+- https://developers.openai.com/codex/learn/best-practices
+- https://developers.openai.com/codex/memories
+- https://developers.openai.com/codex/memories/chronicle
+- https://openai.com/index/introducing-the-codex-app/
+- https://openai.com/academy/codex-automations/
+- https://openai.com/academy/top-10-use-cases-codex-for-work/
+
+Useful patterns:
+
+- Keep personal Codex defaults in `~/.codex/config.toml` and repo-specific
+  behavior in `.codex/config.toml` or repo docs.
+- Turn repeated work into skills only when the scope is narrow, the inputs and
+  outputs are clear, and the workflow is worth reusing.
+- Use automations for specific, repeatable, easy-to-review recurring work.
+- Treat sessions as working threads; fork for alternatives, compact for handoff,
+  and use subagents for bounded exploration, tests, triage, or archaeology.
+- Use Memories for stable preferences and recurring patterns, not hard
+  requirements that should live in repo instructions.
+- Use Chronicle for discovery and orientation only, then confirm important
+  details in the source system.
+- OpenAI's public Codex app examples emphasize practical skills for Figma,
+  project management, deployment, image generation, OpenAI API work, documents,
+  spreadsheets, and PDFs.
+- OpenAI describes internal skills for evals, training-run monitoring, docs,
+  and growth-reporting workflows, plus automations for issue triage, CI
+  summaries, release briefs, and bug checks.
+
+Launcher adaptation:
+
+- `--codex` seeds `docs/workflow-packaging-audit.md` so target projects can
+  audit recent sessions, Memories, Chronicle leads, and existing assets before
+  creating a skill, subagent, automation, or extension.
+- The audit shortlist must include skips and existing coverage, which keeps the
+  launcher from creating speculative or overlapping assets.
+- Existing docs and scripts remain the first packaging choice for repo-local
+  work; skills and automations are reserved for repeated cross-surface or
+  scheduled workflows.
+
 ## Recent Agent Session Managers
 
 Sources:

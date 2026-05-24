@@ -21,6 +21,7 @@ read_when:
 - `user`: Use safe fixtures and explicit docs for Penny demo work; avoid live connector fragility in launcher prompts.
 - `user`: Agent guidance should be explicit and non-ambiguous: think before coding, keep changes simple, edit surgically, and define verifiable success criteria before implementation.
 - `user`: Preserve Ghostty-launcher-style publishing for this repo: commit and push each finished repo-visible file change after verification unless local-only work is requested.
+- `user`: Wants Codex to audit recent sessions, Memories, Chronicle leads, and existing assets before creating skills, subagents, or automations; only high-confidence repeated workflows should be packaged.
 
 ## Repo Facts
 
@@ -28,7 +29,7 @@ read_when:
 - `repo`: Main entrypoint is `bin/cmux-codex-launcher`.
 - `repo`: Interactive chooser mode is `bin/cmux-codex-launcher --choose`.
 - `repo`: Codex-app-first mode is `bin/cmux-codex-launcher --codex`; it opens Codex Desktop, skips cmux, and seeds missing target-repo workflow files.
-- `repo`: `--seed-codex-files` creates missing `AGENTS.md`, `docs/agent-workflow.md`, `docs/queue.md`, `docs/knowledge.md`, and `.codex/config.toml` in a target repo.
+- `repo`: `--seed-codex-files` creates missing `AGENTS.md`, `docs/agent-workflow.md`, `docs/workflow-packaging-audit.md`, `docs/queue.md`, `docs/knowledge.md`, and `.codex/config.toml` in a target repo.
 - `repo`: `--reset-task` refreshes only the mutable `Codex Task` block in the launcher shared context.
 - `repo`: Default profile is `profiles/penny.env`.
 - `repo`: User override profiles live in `~/.config/cmux-codex-launcher/profiles/<name>.env`.
