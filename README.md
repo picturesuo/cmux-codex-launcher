@@ -27,8 +27,8 @@ cmux-codex-launcher
 ```
 
 The default profile is still `penny` for deterministic scripts. The cmux action
-uses `--choose`, which asks what file, app, folder, or GitHub repo you are
-working on and which GitHub repo the work should contribute to.
+uses `--choose`, which asks what project, file, app, folder, or GitHub repo you
+are working on and which GitHub repo the work should contribute to.
 
 ## One-Click Chooser
 
