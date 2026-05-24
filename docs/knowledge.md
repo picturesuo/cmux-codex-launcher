@@ -61,7 +61,7 @@ read_when:
 - `external`: cmux supports `new-workspace --layout` for scripted split layouts.
 - `external`: Codex CLI supports `codex app <path>` on macOS to open Codex Desktop on a workspace path.
 - `external`: Karpathy's `autoresearch` treats Markdown as the human-written program for agents, with explicit editable files, fixed evaluation, and keep/discard loops.
-- `external`: Steinberger's `agent-scripts` keeps AGENTS guidance terse, routing-heavy, and focused on hard rules, with push only on request.
+- `external`: Steinberger's `agent-scripts` keeps AGENTS guidance terse, routing-heavy, and focused on hard rules; this launcher adapts that style but uses auto commit/push by default.
 
 ## Retrieval Hints
 
