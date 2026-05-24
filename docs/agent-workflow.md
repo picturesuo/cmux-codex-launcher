@@ -29,9 +29,14 @@ Good launcher behavior is explicit:
 3. Otherwise create a generic cockpit with `lead`, `build`, `verify`, and
    `ship`.
 4. Write selected target and GitHub repo into the shared context.
-5. Open role tabs idle unless `--autostart-roles` is explicit.
+5. Open role workspaces idle unless `--autostart-roles` is explicit.
 6. Start dev server and preview only when the profile or project shape gives a
    reasonable command and URL.
+
+Each role workspace should stay visually simple: one role-specific Codex
+surface and, when configured, one preview browser surface. Plan docs and helper
+surfaces belong in docs, shared context, or separate workspaces, not hidden
+inside every role.
 
 ## Role Contract
 

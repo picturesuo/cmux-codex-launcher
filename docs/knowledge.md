@@ -12,6 +12,8 @@ read_when:
 - `user`: Prefer cmux plus Codex CLI for coding workstreams, logs, preview, and verification.
 - `user`: Prefer the Codex desktop app for reading, learning, strategy, and broader product context.
 - `user`: Pressing the cmux launcher should ask what file/app/repo is being worked on, infer the local checkout and GitHub target, then open the right cockpit in one step.
+- `user`: After project selection, the chooser should ask for an explicit yes/no confirmation before using the inferred GitHub contribution target.
+- `user`: Role workspaces should stay clean: left sidebar role entry, role-specific Codex surface, and preview surface only. Avoid hidden plan/doc/helper tabs inside each role.
 - `user`: Deterministic profile launches should still exist for scripts and saved project commands.
 - `user`: Penny launcher tabs should use Codex reasoning effort `xhigh` when the user says "extra high."
 - `user`: Keep role prompts specific and avoid loading every tab with irrelevant context.
@@ -29,6 +31,7 @@ read_when:
 - `repo`: Launch state lives in `~/.config/cmux-codex-launcher/state/last.env`.
 - `repo`: Shared task context files live in `~/.codex/cmux-codex-launcher/`.
 - `repo`: The launcher opens cmux workspaces with `cmux new-workspace --layout`.
+- `repo`: The cmux plus-button action opens a temporary chooser workspace that closes itself after launching the role workspaces.
 - `repo`: The launcher opens Codex Desktop with `codex app <project path>` when enabled.
 - `repo`: The plan tab does not auto-run `cmux markdown open`; run the printed command after launch to avoid workspace recursion during startup.
 - `repo`: Project-local cmux actions live in `.cmux/cmux.json`.
@@ -40,6 +43,7 @@ read_when:
 - `repo`: `scripts/doctor.sh` checks local prerequisites and Penny profile resolution.
 - `repo`: `scripts/install-local.sh` creates `~/bin/cmux-codex-launcher`.
 - `repo`: `CML_AUTOSTART_ROLES=false` opens role tabs idle; use `--autostart-roles` only for intentional background agents.
+- `repo`: `CML_ROLE_PANE_SPLIT=0.5` keeps role and preview panes equal; use `0.4` for a preview-heavy 60/40 split.
 - `repo`: Public files must not contain secrets, tokens, OAuth credentials, private data, or local `.env` contents.
 - `repo`: Dynamic chooser cockpits use `lead`, `build`, `verify`, and `ship` roles.
 

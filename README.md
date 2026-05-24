@@ -59,7 +59,9 @@ For a profile, the launcher can open:
 - the cmux Feed in the right sidebar for agent messages and approvals
 - the Codex desktop app for the same workspace path and model settings
 
-By default each role workspace opens Codex CLI idle. That keeps the workspace ready
+By default each role workspace opens Codex CLI idle. A role workspace contains
+only that role surface plus the preview surface when one is configured, so there
+is no hidden plan/doc tab pile inside each role. That keeps the workspace ready
 without letting background agents run setup commands or create recursive cmux
 workspaces before you give them the actual task.
 
@@ -88,6 +90,7 @@ CML_PLAN_DOC="docs/penny-create-operating-outline.md"
 CML_EXTRA_DOCS=("docs/yc-demo-coding-brief.md" "docs/yc-demo-runbook.md")
 CML_CODEX_EFFORT="xhigh"
 CML_ROLE_NAMES=("lead" "create-ui" "brain-evidence" "learn-canvas" "export-verify")
+CML_ROLE_PANE_SPLIT="0.5"
 CML_AUTOSTART_ROLES="false"
 CML_SHOW_FEED_SIDEBAR="true"
 CML_WORKSPACE_MODE="sidebar"
@@ -116,10 +119,13 @@ The implementation follows current cmux patterns:
 
 - project-local `.cmux/cmux.json` commands and actions when a repo should carry
   its own layout
+- a temporary chooser workspace for the plus button; after the chooser creates
+  role workspaces, it closes itself so the sidebar stays clean
 - `cmux new-workspace --layout` for one-shot launchers
 - browser surfaces for local preview
 - notification/read-state workflow instead of staring at many split panes
 - `codex app <path>` for the desktop app when available
 
-See [docs/launcher-design.md](docs/launcher-design.md) for the design notes and
-external references.
+See [docs/launcher-design.md](docs/launcher-design.md) and
+[docs/cmux-cockpit-loadout.md](docs/cmux-cockpit-loadout.md) for the design
+notes, success criteria, and external references.

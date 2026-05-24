@@ -321,7 +321,7 @@ single_surface_layout() {
 split_preview_layout() {
   local left_surface_json=$1
   local preview_url=${2:-}
-  local right_surface_json
+  local right_surface_json split
 
   if [ -z "$preview_url" ]; then
     single_surface_layout "$left_surface_json"
@@ -329,7 +329,9 @@ split_preview_layout() {
   fi
 
   right_surface_json="$(browser_surface "preview" "$preview_url")"
-  printf '{"direction":"horizontal","split":0.5,"children":[{"pane":{"surfaces":[%s]}},{"pane":{"surfaces":[%s]}}]}' \
+  split="${CML_ROLE_PANE_SPLIT:-0.5}"
+  printf '{"direction":"horizontal","split":%s,"children":[{"pane":{"surfaces":[%s]}},{"pane":{"surfaces":[%s]}}]}' \
+    "$split" \
     "$left_surface_json" \
     "$right_surface_json"
 }
@@ -393,6 +395,22 @@ prompt_value() {
   fi
   IFS= read -r value
   printf '%s' "${value:-$default}"
+}
+
+confirm_yes() {
+  local prompt=$1
+  local value
+
+  if ! is_tty; then
+    return 0
+  fi
+
+  printf '%s [Y/n]: ' "$prompt" >&2
+  IFS= read -r value
+  case "$value" in
+    ''|[Yy]|[Yy][Ee][Ss]) return 0 ;;
+    *) return 1 ;;
+  esac
 }
 
 search_roots() {
@@ -861,6 +879,13 @@ select_github_repo() {
   local input tmp line score kind label path repo url
 
   input="$GITHUB_OVERRIDE"
+  if [ -z "$input" ] && [ -n "$default_repo" ]; then
+    if confirm_yes "Use GitHub repo $default_repo as the contribution target?"; then
+      printf '%s' "$default_repo"
+      return 0
+    fi
+  fi
+
   if [ -z "$input" ]; then
     input="$(prompt_value "Which GitHub repo should this contribute to?" "$default_repo")"
   fi
@@ -1244,6 +1269,7 @@ CML_WORKSPACE_DESCRIPTION="${CML_WORKSPACE_DESCRIPTION:-cmux Codex workspace for
 CML_PREVIEW_URL="${PREVIEW_OVERRIDE:-${CML_PREVIEW_URL:-}}"
 CML_DEV_COMMAND="${DEV_COMMAND_OVERRIDE:-${CML_DEV_COMMAND:-}}"
 CML_PLAN_DOC="${CML_PLAN_DOC:-README.md}"
+CML_ROLE_PANE_SPLIT="${CML_ROLE_PANE_SPLIT:-0.5}"
 CML_CODEX_MODEL="${CML_CODEX_MODEL:-gpt-5.5}"
 CML_CODEX_EFFORT="${CML_CODEX_EFFORT:-medium}"
 CML_SANDBOX="${CML_SANDBOX:-workspace-write}"

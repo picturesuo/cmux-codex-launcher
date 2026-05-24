@@ -40,6 +40,20 @@ case "$dry_run" in
   * ) printf 'dry run did not put preview beside role workspace\n' >&2; exit 1 ;;
 esac
 
+case "$dry_run" in
+  *'"name":"plan"'*|*"cmux markdown open"* )
+    printf 'sidebar role layout should not add plan/doc helper tabs\n' >&2
+    exit 1
+    ;;
+esac
+
+cmux_config="$(cat "$ROOT/.cmux/cmux.json")"
+
+case "$cmux_config" in
+  *'"choose-codex-cockpit"'*'"type": "workspaceCommand"'*'"commandName": "Codex Cockpit Picker"'* ) ;;
+  * ) printf 'cmux plus action is not wired to the temporary picker workspace\n' >&2; exit 1 ;;
+esac
+
 picker_dry_run="$("$ROOT/bin/cmux-codex-launcher" --choose --query penny --dry-run)"
 
 case "$picker_dry_run" in

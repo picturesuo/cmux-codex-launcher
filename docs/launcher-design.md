@@ -37,6 +37,9 @@ Deterministic profile launches remain available for scripted paths such as
 - Keep each role in a separate cmux workspace by default so the left sidebar is
   the role switcher, one agent is visible at a time, and unread notifications
   mark the workspace that needs attention.
+- The plus-button chooser should be a temporary workspace that closes after a
+  successful launch, leaving only role workspaces and any intentional support
+  workspaces in the sidebar.
 
 ## Incorporated Patterns
 
@@ -86,5 +89,8 @@ the right half of each role workspace rather than as another tab or pane pile.
 - Simon Willison on parallel coding agents: https://simonwillison.net/2025/Oct/5/parallel-coding-agents/
 - OpenAI Codex best practices: https://developers.openai.com/codex/learn/best-practices
 - cmux custom commands: https://cmux.com/docs/custom-commands
+- cmux homepage community workflow notes: https://cmux.com/
+- Peter Steinberger May 23, 2026 cmux/Codex split snapshot: https://digg.com/ai/j5do9ink
+- cmux Vault changelog: https://cmux.com/blog/cmux-vault
 - cmux workspace CLI docs: https://manaflow-ai-cmux.mintlify.app/cli/workspaces
 - Codex CLI reference: https://developers.openai.com/codex/cli/reference

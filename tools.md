@@ -120,6 +120,18 @@ cmux new-workspace --cwd . --name "Codex coding" --command "codex"
 cmux new-workspace --cwd . --name "Dev" --layout '{"pane":{"surfaces":[{"type":"terminal","command":"pwd"}]}}'
 ```
 
+### `.cmux/cmux.json`
+
+- Purpose: project-local cmux plus-button and command-palette actions.
+- Behavior: the plus button runs `Choose Codex Cockpit`, a temporary picker
+  workspace that asks for the project and GitHub target, launches role
+  workspaces, then closes itself.
+
+```bash
+cmux config validate
+cmux reload-config
+```
+
 ### `cmux markdown open`
 
 - Purpose: open a markdown file as a formatted live panel.

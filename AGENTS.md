@@ -13,6 +13,7 @@ preview/log surfaces, shared context, and a clear ship path.
 - `README.md`: user-facing behavior and commands.
 - `tools.md`: exact local commands.
 - `docs/launcher-design.md`: architecture and external references.
+- `docs/cmux-cockpit-loadout.md`: one-click cmux loadout and success criteria.
 - `docs/agent-workflow.md`: launch loop, handoff, and shipping behavior.
 - `docs/knowledge.md`: stable repo facts and user preferences.
 - `docs/agentic-workflow-research.md`: sourced workflow research and success criteria.

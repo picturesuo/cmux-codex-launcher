@@ -37,6 +37,7 @@ The user-facing cmux action and `/Users/bensuo/codex-launchpad.sh` default to
 - `CML_PLAN_DOC`
 - `CML_EXTRA_DOCS`
 - `CML_ROLE_NAMES`
+- `CML_ROLE_PANE_SPLIT`
 - `CML_CODEX_MODEL`
 - `CML_CODEX_EFFORT`
 - `CML_SANDBOX`
@@ -63,6 +64,9 @@ start work immediately from its role prompt.
 role so the left sidebar is the role switcher and unread agent messages can
 mark the relevant workspace. Use `tabs` only for the older single-workspace,
 multi-surface layout.
+
+`CML_ROLE_PANE_SPLIT=0.5` is the default role/preview split. Lower it to `0.4`
+when the preview should get roughly 60% of the workspace width.
 
 `CML_SELECTED_TARGET` and `CML_GITHUB_REPO` are normally set by the chooser.
 Profiles do not need to define them.
