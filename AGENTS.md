@@ -31,6 +31,47 @@ preview/log surfaces, shared context, and a clear ship path.
 - For target projects launched by this tool, read that repo's own `AGENTS.md`
   before editing.
 
+## Think Before Coding
+
+- State assumptions before implementation when they affect the path.
+- Do not hide confusion. If something is unclear, name it and ask.
+- If multiple interpretations exist, present them before choosing.
+- If a simpler approach exists, say so and use it unless there is a concrete
+  reason not to.
+- Push back when the request implies unnecessary scope, risky data exposure, or
+  brittle architecture.
+
+## Simplicity First
+
+- Write the minimum code that solves the problem.
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No speculative configurability.
+- No error handling for impossible scenarios.
+- If a change feels overbuilt, rewrite it smaller before handoff.
+
+## Surgical Changes
+
+- Touch only what the request requires.
+- Do not improve adjacent code, comments, formatting, docs, or config unless the
+  current change requires it.
+- Match existing style even when another style would be preferable.
+- Mention unrelated dead code or cleanup opportunities; do not remove them
+  unless asked.
+- Remove only imports, variables, functions, docs, or config entries made
+  obsolete by your own change.
+- Every changed line must trace to the user request, a verified bug, or cleanup
+  caused by the current change.
+
+## Goal-Driven Execution
+
+- Convert vague tasks into verifiable success criteria before editing.
+- For bugs, prefer a check that reproduces the failure before fixing it.
+- For behavior changes, define the dry run, test, or runtime proof that will
+  show completion.
+- For multi-step work, keep a short plan where each step has an explicit check.
+- Loop until the relevant checks pass or a real blocker is named.
+
 ## Launcher Loop
 
 1. Resolve the target from explicit args, `--choose`, a profile, or last state.
@@ -64,6 +105,9 @@ preview/log surfaces, shared context, and a clear ship path.
 - Start with `git status --short --branch`.
 - Preserve user or other-agent changes; do not revert unrelated work.
 - Use focused commits with conventional prefixes when practical.
-- Push only when the user asks for GitHub publication, asks to push, or the task
-  explicitly requires publication.
+- Publish mode is `auto` unless the user explicitly asks for local-only work.
+- Commit and push each finished repo-visible file change immediately after
+  verification.
+- Prefer one commit per finished file; group files only when they are
+  inseparable, such as source plus generated output.
 - Destructive git operations require explicit user instruction.
