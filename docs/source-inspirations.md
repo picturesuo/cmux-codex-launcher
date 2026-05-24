@@ -49,6 +49,7 @@ Launcher adaptation:
 Source:
 
 - https://github.com/steipete/agent-scripts/blob/main/AGENTS.MD
+- https://steipete.me/posts/just-talk-to-it
 
 Useful patterns:
 
@@ -58,6 +59,10 @@ Useful patterns:
 - Use explicit publish policy; in this repo, publish mode is now `auto` unless
   the user asks for local-only work.
 - Treat dirty worktrees and unknown changes as important state, not noise.
+- Keep parallel agent sessions visible in terminal panes when steering matters.
+- Prefer lightweight CLIs such as `gh` over context-heavy tool plumbing when the
+  CLI can answer the same question.
+- Use screenshots as fast UI context, then verify with tests or runtime checks.
 
 Launcher adaptation:
 
@@ -67,3 +72,24 @@ Launcher adaptation:
 - Finished repo-visible file changes are committed and pushed one file at a time
   by default.
 - Shared context captures current task state instead of bloating prompts.
+
+## Simon Willison Parallel Agents
+
+Source:
+
+- https://simonwillison.net/2025/Oct/5/parallel-coding-agents/
+
+Useful patterns:
+
+- Use agents for research proof-of-concepts before committing to an approach.
+- Send agents through existing codepaths to produce reusable archaeology notes.
+- Keep small maintenance tasks separate from high-risk feature work.
+- Specify actual implementation work clearly enough that review stays cheap.
+
+Launcher adaptation:
+
+- Keep the generic cockpit role set small: `lead`, `build`, `verify`, `ship`.
+- Treat research and archaeology as first-class work the visible role tabs can
+  do, not as background automation hidden from the user.
+- Preserve useful findings in shared context or docs so future prompts start
+  with better local knowledge.
