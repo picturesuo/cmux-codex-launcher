@@ -378,22 +378,26 @@ is_tty() {
   [ -t 0 ] && [ -t 1 ]
 }
 
+can_prompt() {
+  is_tty || { : </dev/tty >/dev/tty; } 2>/dev/null
+}
+
 prompt_value() {
   local prompt=$1
   local default=${2:-}
   local value
 
-  if ! is_tty; then
+  if ! can_prompt; then
     printf '%s' "$default"
     return
   fi
 
   if [ -n "$default" ]; then
-    printf '%s [%s]: ' "$prompt" "$default" >&2
+    printf '%s [%s]: ' "$prompt" "$default" >/dev/tty
   else
-    printf '%s: ' "$prompt" >&2
+    printf '%s: ' "$prompt" >/dev/tty
   fi
-  IFS= read -r value
+  IFS= read -r value </dev/tty
   printf '%s' "${value:-$default}"
 }
 
@@ -401,12 +405,12 @@ confirm_yes() {
   local prompt=$1
   local value
 
-  if ! is_tty; then
+  if ! can_prompt; then
     return 0
   fi
 
-  printf '%s [Y/n]: ' "$prompt" >&2
-  IFS= read -r value
+  printf '%s [Y/n]: ' "$prompt" >/dev/tty
+  IFS= read -r value </dev/tty
   case "$value" in
     ''|[Yy]|[Yy][Ee][Ss]) return 0 ;;
     *) return 1 ;;

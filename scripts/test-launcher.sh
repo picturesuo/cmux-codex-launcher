@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 bash -n "$ROOT/bin/cmux-codex-launcher"
+bash -n "$ROOT/scripts/cmux-launcher-entry.sh"
 bash -n "$ROOT/scripts/install-local.sh"
 bash -n "$ROOT/scripts/doctor.sh"
 
@@ -50,8 +51,15 @@ esac
 cmux_config="$(cat "$ROOT/.cmux/cmux.json")"
 
 case "$cmux_config" in
-  *'"choose-codex-cockpit"'*'"type": "workspaceCommand"'*'"commandName": "Codex Cockpit Picker"'* ) ;;
+  *'"choose-codex-cockpit"'*'"type": "command"'*'"command":'*'./scripts/cmux-launcher-entry.sh --choose'*'"target": "newTabInCurrentPane"'* ) ;;
   * ) printf 'cmux plus action is not wired to the temporary picker workspace\n' >&2; exit 1 ;;
+esac
+
+case "$cmux_config" in
+  *'; status=$?'*|*' status=$?'* )
+    printf 'cmux launcher action should not use zsh reserved status variable\n' >&2
+    exit 1
+    ;;
 esac
 
 picker_dry_run="$("$ROOT/bin/cmux-codex-launcher" --choose --query penny --dry-run)"

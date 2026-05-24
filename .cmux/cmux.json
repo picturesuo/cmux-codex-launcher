@@ -3,10 +3,11 @@
   "schemaVersion": 1,
   "actions": {
     "choose-codex-cockpit": {
-      "type": "workspaceCommand",
+      "type": "command",
       "title": "Choose Codex Cockpit",
       "subtitle": "Ask for project and GitHub target, then open role workspaces",
-      "commandName": "Codex Cockpit Picker",
+      "command": "cmux new-workspace --name 'Choose Codex Cockpit' --cwd '/Users/bensuo/Desktop/cmux-codex-launcher' --command './scripts/cmux-launcher-entry.sh --choose' --focus true",
+      "target": "newTabInCurrentPane",
       "palette": true,
       "icon": {
         "type": "symbol",
@@ -14,10 +15,11 @@
       }
     },
     "open-penny-cockpit": {
-      "type": "workspaceCommand",
+      "type": "command",
       "title": "Open Penny Cockpit",
       "subtitle": "Launch Penny in cmux and Codex app",
-      "commandName": "Penny Cockpit Launcher",
+      "command": "cmux new-workspace --name 'Open Penny Cockpit' --cwd '/Users/bensuo/Desktop/cmux-codex-launcher' --command './scripts/cmux-launcher-entry.sh --profile penny' --focus true",
+      "target": "newTabInCurrentPane",
       "palette": true,
       "icon": {
         "type": "symbol",
@@ -52,48 +54,6 @@
     }
   },
   "commands": [
-    {
-      "name": "Codex Cockpit Picker",
-      "description": "Ask which project to work on, confirm the GitHub target, launch the role workspaces, then close this temporary picker.",
-      "keywords": ["launcher", "picker", "github", "roles"],
-      "workspace": {
-        "name": "Choose Codex Cockpit",
-        "cwd": ".",
-        "layout": {
-          "pane": {
-            "surfaces": [
-              {
-                "type": "terminal",
-                "name": "choose",
-                "command": "repo=\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)\"; cd \"$repo\" && bin/cmux-codex-launcher --choose; status=$?; if [ \"$status\" -eq 0 ]; then cmux close-workspace --workspace \"$CMUX_WORKSPACE_ID\"; else printf '\\nLauncher failed (exit %s). Fix it here, then rerun bin/cmux-codex-launcher --choose.\\n' \"$status\"; exec \"${SHELL:-/bin/zsh}\" -l; fi",
-                "focus": true
-              }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "name": "Penny Cockpit Launcher",
-      "description": "Launch the saved Penny profile, then close this temporary launcher workspace.",
-      "keywords": ["launcher", "penny", "roles"],
-      "workspace": {
-        "name": "Open Penny Cockpit",
-        "cwd": ".",
-        "layout": {
-          "pane": {
-            "surfaces": [
-              {
-                "type": "terminal",
-                "name": "open-penny",
-                "command": "repo=\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)\"; cd \"$repo\" && bin/cmux-codex-launcher --profile penny; status=$?; if [ \"$status\" -eq 0 ]; then cmux close-workspace --workspace \"$CMUX_WORKSPACE_ID\"; else printf '\\nLauncher failed (exit %s). Fix it here, then rerun bin/cmux-codex-launcher --profile penny.\\n' \"$status\"; exec \"${SHELL:-/bin/zsh}\" -l; fi",
-                "focus": true
-              }
-            ]
-          }
-        }
-      }
-    },
     {
       "name": "Launcher Picker Dry Run",
       "description": "Resolve a file/app/repo search into a launch plan without opening cmux or Codex app.",
