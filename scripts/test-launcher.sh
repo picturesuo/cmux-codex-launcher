@@ -110,6 +110,55 @@ case "$dynamic_dry_run" in
   * ) printf 'dynamic picker did not include shipping role\n' >&2; exit 1 ;;
 esac
 
+codex_dry_run="$("$ROOT/bin/cmux-codex-launcher" --codex --project "$ROOT" --name "Launcher" --dry-run)"
+
+case "$codex_dry_run" in
+  *"codex_app_first: 1"* ) ;;
+  * ) printf 'codex mode did not mark app-first launch\n' >&2; exit 1 ;;
+esac
+
+case "$codex_dry_run" in
+  *"cmux_workspace: 0"* ) ;;
+  * ) printf 'codex mode should skip cmux workspace creation\n' >&2; exit 1 ;;
+esac
+
+case "$codex_dry_run" in
+  *"seed_codex_files: 1"* ) ;;
+  * ) printf 'codex mode should seed workflow files\n' >&2; exit 1 ;;
+esac
+
+case "$codex_dry_run" in
+  *".codex/config.toml"* ) ;;
+  * ) printf 'codex mode dry run should list repo-scoped config file\n' >&2; exit 1 ;;
+esac
+
+seed_tmp="$(mktemp -d -t cmux-codex-seed.XXXXXX)"
+seed_project="$seed_tmp/project"
+mkdir -p "$seed_project"
+printf '# Seed Demo\n' > "$seed_project/README.md"
+HOME="$seed_tmp/home" CMUX_CODEX_LAUNCHER_HOME="$seed_tmp/config" \
+  "$ROOT/bin/cmux-codex-launcher" --codex --no-app --reset-task --project "$seed_project" --name "Seed Demo" >/dev/null
+
+for seeded_file in \
+  AGENTS.md \
+  docs/agent-workflow.md \
+  docs/queue.md \
+  docs/knowledge.md \
+  .codex/config.toml
+do
+  if [ ! -f "$seed_project/$seeded_file" ]; then
+    printf 'codex seed did not create %s\n' "$seeded_file" >&2
+    exit 1
+  fi
+done
+
+if ! grep -q '<!-- codex-task:start -->' "$seed_tmp/home/.codex/cmux-codex-launcher/seed-demo-shared-context.md"; then
+  printf 'codex reset did not create the shared context task marker\n' >&2
+  exit 1
+fi
+
+rm -rf "$seed_tmp"
+
 file_dry_run="$(CMUX_CODEX_SEARCH_ROOTS="$ROOT" "$ROOT/bin/cmux-codex-launcher" --choose --query launcher-design --dry-run)"
 
 case "$file_dry_run" in

@@ -20,6 +20,10 @@ PRINT_LAYOUT=0
 OPEN_CODEX_APP_OVERRIDE=""
 AUTOSTART_ROLES_OVERRIDE=""
 CREATE_CMUX=1
+CODEX_APP_FIRST=0
+PROFILE_EXPLICIT=0
+SEED_CODEX_FILES=0
+RESET_TASK_CONTEXT=0
 RESUME_LAST=0
 STATUS_LAST=0
 FOCUS_WORKSPACE="true"
@@ -45,6 +49,10 @@ Options:
   --query <text>          Seed --choose search; selects the best match without a TTY
   --github <repo|url>     Override the GitHub repo for --choose
   --no-clone              Do not clone a GitHub-only match
+  --codex                 Codex-app-first chooser: seed workflow files, open Codex app, skip cmux
+  --seed-codex-files      Create missing Codex workflow files in the target repo
+  --no-seed-codex-files   Do not create target-repo Codex workflow files
+  --reset-task            Reset this launcher's shared context to a blank current task
   --app                   Open Codex desktop app (default unless profile disables it)
   --no-app                Do not open Codex desktop app
   --autostart-roles       Send each role prompt immediately to Codex CLI
@@ -61,6 +69,7 @@ Examples:
   bin/cmux-codex-launcher --profile penny
   bin/cmux-codex-launcher --project /Users/me/Projects/app --name App
   bin/cmux-codex-launcher --choose
+  bin/cmux-codex-launcher --codex --query app
   bin/cmux-codex-launcher --profile penny --dry-run
 EOF
 }
@@ -294,6 +303,192 @@ update_shared_context_selection() {
 <!-- launcher-selection:end -->
 EOF
     mv "$tmp" "$session_file"
+  fi
+}
+
+reset_shared_context_task() {
+  local session_file=$1
+  local tmp
+
+  tmp="$(mktemp -t cmux-codex-task.XXXXXX)"
+  if [ -f "$session_file" ] && grep -q '<!-- codex-task:start -->' "$session_file"; then
+    awk \
+      -v updated_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+      '
+      /<!-- codex-task:start -->/ {
+        print "<!-- codex-task:start -->"
+        print "## Codex Task"
+        print ""
+        print "- Goal: wait for the user to give the next concrete task."
+        print "- Scope: no repo-visible changes until the task is stated."
+        print "- Status: ready."
+        print "- Updated at: " updated_at
+        print ""
+        print "## Working Notes"
+        print ""
+        print "- Assumptions: none yet."
+        print "- Success criteria: define before editing."
+        print "- Verification: choose the narrowest useful proof once the task is known."
+        print "<!-- codex-task:end -->"
+        skip=1
+        next
+      }
+      /<!-- codex-task:end -->/ {
+        skip=0
+        next
+      }
+      !skip { print }
+    ' "$session_file" > "$tmp"
+    mv "$tmp" "$session_file"
+  else
+    cat "$session_file" > "$tmp"
+    cat >> "$tmp" <<EOF
+
+<!-- codex-task:start -->
+## Codex Task
+
+- Goal: wait for the user to give the next concrete task.
+- Scope: no repo-visible changes until the task is stated.
+- Status: ready.
+- Updated at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+## Working Notes
+
+- Assumptions: none yet.
+- Success criteria: define before editing.
+- Verification: choose the narrowest useful proof once the task is known.
+<!-- codex-task:end -->
+EOF
+    mv "$tmp" "$session_file"
+  fi
+}
+
+seed_codex_project_files() {
+  local project_name=$1
+  local project_dir=$2
+
+  mkdir -p "$project_dir/docs" "$project_dir/.codex"
+
+  if [ ! -e "$project_dir/AGENTS.md" ]; then
+    cat > "$project_dir/AGENTS.md" <<EOF
+# AGENTS.md
+
+## Purpose
+
+This repo is worked by Codex sessions launched through cmux-codex-launcher.
+
+## Read First
+
+- README.md when present.
+- docs/agent-workflow.md
+- docs/queue.md
+- docs/knowledge.md
+
+## Rules
+
+- Follow the user's latest request.
+- Keep current-task state in the shared context file printed by the launcher.
+- Keep durable project facts in docs/knowledge.md.
+- Keep the next small task in docs/queue.md.
+- State assumptions before implementation when they affect the path.
+- Verify with the narrowest useful local command before committing or pushing.
+- Do not store secrets in repo docs, profiles, .codex config, commits, or PR bodies.
+EOF
+  fi
+
+  if [ ! -e "$project_dir/docs/agent-workflow.md" ]; then
+    cat > "$project_dir/docs/agent-workflow.md" <<EOF
+# Agent Workflow
+
+This is the Codex-first workflow source for "$project_name".
+
+## Codex App Loop
+
+1. Read AGENTS.md, then this file.
+2. Read the shared context file printed by the launcher.
+3. Check docs/queue.md for the next task and docs/knowledge.md for durable facts.
+4. Define success criteria before editing.
+5. Make the smallest coherent change.
+6. Run the proof that matches the risk.
+7. Update the shared context with status, changed files, verification, and next action.
+
+## Context Reset
+
+- Treat about 80% context used as the reset point.
+- Before compacting or starting a fresh Codex app thread, update the shared context file.
+- Keep current task state in the shared context file, not in AGENTS.md.
+- Keep durable reusable knowledge in docs/knowledge.md.
+
+## Parallel Work
+
+- Split only when tasks have clear file ownership.
+- Prefer one Codex app thread per file, feature slice, or proof.
+- Do not let two sessions edit the same file unless one lead session sequences the work.
+- Finished sessions should report changed files, verification, residual risk, and ship status.
+
+## Ship Path
+
+- Follow the repo-local AGENTS.md and the selected GitHub target from the launcher.
+- Commit and push only verified repo-visible work.
+- Keep private, scratch, partial, failing, and unverified work out of the publish path.
+EOF
+  fi
+
+  if [ ! -e "$project_dir/docs/queue.md" ]; then
+    cat > "$project_dir/docs/queue.md" <<'EOF'
+# Queue
+
+## Now
+
+- [ ] Capture the next concrete Codex task.
+
+## Next
+
+- [ ] Add the next smallest shippable step.
+- [ ] Capture the main edge case.
+- [ ] Capture one cleanup item.
+
+## Blocked
+
+- [ ] No blockers recorded yet.
+
+## Discovered While Working
+
+- [ ] Add useful follow-ups here instead of expanding the active task.
+EOF
+  fi
+
+  if [ ! -e "$project_dir/docs/knowledge.md" ]; then
+    cat > "$project_dir/docs/knowledge.md" <<'EOF'
+# Knowledge
+
+## User-Provided Knowledge
+
+- Capture durable user guidance, preferences, and constraints that should survive a single task.
+
+## Project Facts
+
+- Capture stable project facts, decisions, and summaries worth reusing.
+
+## Retrieval Hints
+
+- Search this file, the shared context file, and nearby repo docs with `rg` before broader search.
+- Label each note by source when useful: `user`, `repo`, or `external`.
+EOF
+  fi
+
+  if [ ! -e "$project_dir/.codex/config.toml" ]; then
+    cat > "$project_dir/.codex/config.toml" <<EOF
+# Repo-scoped Codex defaults seeded by cmux-codex-launcher.
+# Keep secrets out of this file.
+
+model = $(json_string "$CML_CODEX_MODEL")
+model_reasoning_effort = $(json_string "$CML_CODEX_EFFORT")
+plan_mode_reasoning_effort = $(json_string "$CML_CODEX_PLAN_EFFORT")
+
+# Personal sandbox and approval defaults belong in ~/.codex/config.toml unless
+# this repo has a clear reason to tighten or loosen them.
+EOF
   fi
 }
 
@@ -846,7 +1041,11 @@ apply_dynamic_profile() {
   CML_PROJECT_DIR="$project_dir"
   CML_PROJECT_NAME="${NAME_OVERRIDE:-$project_base}"
   CML_WORKSPACE_NAME="${WORKSPACE_OVERRIDE:-$CML_PROJECT_NAME Cockpit}"
-  CML_WORKSPACE_DESCRIPTION="One-click cmux Codex cockpit for $CML_PROJECT_NAME"
+  if [ "$CODEX_APP_FIRST" -eq 1 ]; then
+    CML_WORKSPACE_DESCRIPTION="Codex app launch for $CML_PROJECT_NAME"
+  else
+    CML_WORKSPACE_DESCRIPTION="One-click cmux Codex cockpit for $CML_PROJECT_NAME"
+  fi
   CML_PREVIEW_URL="${PREVIEW_OVERRIDE:-$preview_url}"
   CML_DEV_COMMAND="${DEV_COMMAND_OVERRIDE:-$dev_command}"
   CML_PLAN_DOC="README.md"
@@ -1171,6 +1370,7 @@ while [ "$#" -gt 0 ]; do
     --profile)
       shift; [ "$#" -gt 0 ] || die "missing profile"
       PROFILE="$1"
+      PROFILE_EXPLICIT=1
       ;;
     --project)
       shift; [ "$#" -gt 0 ] || die "missing project path"
@@ -1205,6 +1405,21 @@ while [ "$#" -gt 0 ]; do
       ;;
     --no-clone)
       CLONE_MISSING_GITHUB=0
+      ;;
+    --codex|--codex-app)
+      CODEX_APP_FIRST=1
+      CREATE_CMUX=0
+      OPEN_CODEX_APP_OVERRIDE="true"
+      SEED_CODEX_FILES=1
+      ;;
+    --seed-codex-files)
+      SEED_CODEX_FILES=1
+      ;;
+    --no-seed-codex-files)
+      SEED_CODEX_FILES=0
+      ;;
+    --reset-task)
+      RESET_TASK_CONTEXT=1
       ;;
     --app)
       OPEN_CODEX_APP_OVERRIDE="true"
@@ -1260,8 +1475,24 @@ if [ "$RESUME_LAST" -eq 1 ]; then
   load_last_state
 fi
 
+if [ "$CODEX_APP_FIRST" -eq 1 ] && [ "$PROFILE_EXPLICIT" -eq 0 ] && [ -z "$PROJECT_OVERRIDE" ] && [ "$RESUME_LAST" -eq 0 ]; then
+  INTERACTIVE_PICKER=1
+fi
+if [ "$CODEX_APP_FIRST" -eq 1 ] && [ -n "$PICKER_QUERY" ]; then
+  INTERACTIVE_PICKER=1
+fi
+
 if [ "$INTERACTIVE_PICKER" -eq 1 ]; then
   run_picker
+elif [ "$CODEX_APP_FIRST" -eq 1 ] && [ "$PROFILE_EXPLICIT" -eq 0 ] && [ -n "$PROJECT_OVERRIDE" ]; then
+  PROJECT_OVERRIDE="$(cd "$PROJECT_OVERRIDE" && pwd)" || die "project dir not found: $PROJECT_OVERRIDE"
+  PROFILE="dynamic"
+  PROFILE_PATH="direct-project"
+  CML_GITHUB_REPO="$(git_origin_ref_for "$PROJECT_OVERRIDE" 2>/dev/null || true)"
+  if [ -n "$GITHUB_OVERRIDE" ]; then
+    CML_GITHUB_REPO="$(normalize_github_repo_ref "$GITHUB_OVERRIDE" 2>/dev/null || true)"
+  fi
+  apply_dynamic_profile "$PROJECT_OVERRIDE" "$PROJECT_OVERRIDE" "$CML_GITHUB_REPO"
 else
   PROFILE_PATH="$(profile_path_for "$PROFILE" || true)"
   [ -n "${PROFILE_PATH:-}" ] || die "profile not found: $PROFILE"
@@ -1296,6 +1527,9 @@ CML_PROJECT_DIR="$(cd "$CML_PROJECT_DIR" && pwd)"
 
 SESSION_FILE="$(create_shared_context "$CML_PROJECT_NAME" "$CML_PROJECT_DIR")"
 update_shared_context_selection "$SESSION_FILE" "$CML_PROJECT_NAME" "$CML_PROJECT_DIR"
+if [ "$RESET_TASK_CONTEXT" -eq 1 ] && [ "$DRY_RUN" -ne 1 ]; then
+  reset_shared_context_task "$SESSION_FILE"
+fi
 if [ "$CML_WORKSPACE_MODE" = "tabs" ]; then
   LAYOUT_JSON="$(build_layout "$CML_PROJECT_NAME" "$CML_PROJECT_DIR" "$SESSION_FILE")"
 else
@@ -1316,6 +1550,9 @@ project_dir: $CML_PROJECT_DIR
 workspace: $CML_WORKSPACE_NAME
 codex_app: $CML_OPEN_CODEX_APP
 cmux_workspace: $CREATE_CMUX
+codex_app_first: $CODEX_APP_FIRST
+seed_codex_files: $SEED_CODEX_FILES
+reset_task: $RESET_TASK_CONTEXT
 autostart_roles: $CML_AUTOSTART_ROLES
 feed_sidebar: $CML_SHOW_FEED_SIDEBAR
 workspace_mode: $CML_WORKSPACE_MODE
@@ -1329,6 +1566,12 @@ dev_command: ${CML_DEV_COMMAND:-none}
 selected_target: ${CML_SELECTED_TARGET:-none}
 github_repo: ${CML_GITHUB_REPO:-none}
 shared_context: $SESSION_FILE
+codex_workflow_files:
+  - AGENTS.md
+  - docs/agent-workflow.md
+  - docs/queue.md
+  - docs/knowledge.md
+  - .codex/config.toml
 docs:
 $(existing_doc_list "$CML_PROJECT_DIR" | sed 's/^/  - /')
 roles:
@@ -1337,6 +1580,10 @@ layout:
 $LAYOUT_JSON
 EOF
   exit 0
+fi
+
+if [ "$SEED_CODEX_FILES" -eq 1 ]; then
+  seed_codex_project_files "$CML_PROJECT_NAME" "$CML_PROJECT_DIR"
 fi
 
 save_last_state "$CML_PROJECT_DIR"
