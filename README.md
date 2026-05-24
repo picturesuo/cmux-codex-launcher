@@ -1,12 +1,14 @@
 # cmux Codex Launcher
 
-A small macOS launcher for opening a ready-to-work cmux coding cockpit and the
-Codex desktop app on the same project.
+A small macOS launcher for opening a ready-to-work Codex desktop app workspace
+or cmux coding cockpit on the right project.
 
-It is built for the current Steinberger-style split:
+It now supports two launch styles:
 
-- Codex app: reading, knowledge work, learning, Appshots, and strategy.
-- cmux + Codex CLI: coding workstreams, preview, logs, and verification.
+- Codex app first: project chooser, repo-local workflow files, shared context,
+  and the Codex desktop app as the main work surface.
+- cmux + Codex CLI: visible role workspaces, preview, logs, dev server, and
+  verification panes when a terminal cockpit is still useful.
 
 The launcher avoids the old Ghostty AppleScript project prompt. It uses explicit
 profiles, deterministic defaults, and cmux workspace layouts.
@@ -14,6 +16,8 @@ profiles, deterministic defaults, and cmux workspace layouts.
 ## Quick Start
 
 ```bash
+bin/cmux-codex-launcher --codex
+bin/cmux-codex-launcher --codex --query penny
 bin/cmux-codex-launcher --choose
 bin/cmux-codex-launcher --choose --query penny --dry-run
 bin/cmux-codex-launcher --profile penny
@@ -36,6 +40,36 @@ The cmux Command Palette and plus-button context menu also include
 workspace with a plain-language guide on the left and ReleaseBar/RepoBar
 reference surfaces on the right.
 
+## Codex App First
+
+Use `--codex` when the Codex desktop app should replace the terminal cockpit for
+the current task:
+
+```bash
+bin/cmux-codex-launcher --codex
+bin/cmux-codex-launcher --codex --profile penny
+bin/cmux-codex-launcher --codex --reset-task
+```
+
+`--codex` asks for the project/file/repo unless a profile or project path is
+given, confirms the GitHub target, seeds missing workflow files, opens Codex
+Desktop, and skips cmux. The seeded target-repo files are:
+
+```text
+AGENTS.md
+docs/agent-workflow.md
+docs/queue.md
+docs/knowledge.md
+.codex/config.toml
+```
+
+Existing files are not overwritten. Use `--no-seed-codex-files` for repos that
+already have their own Codex setup. Use `--reset-task` to clear only the mutable
+task block in the launcher shared context, leaving durable knowledge and repo
+docs intact.
+
+See [docs/codex-app-workflow.md](docs/codex-app-workflow.md).
+
 ## One-Click Chooser
 
 `--choose` searches:
@@ -57,7 +91,9 @@ target so every Codex tab starts from the same repo boundary.
 
 ## What Opens
 
-For a profile, the launcher can open:
+For `--codex`, the launcher opens Codex Desktop on the resolved checkout and
+creates missing target-repo workflow files. For a cmux launch, the launcher can
+open:
 
 - a set of left-sidebar cmux workspaces, one per Codex role
 - an optional dev-server workspace
@@ -111,6 +147,8 @@ Source a target project’s `.env.local` from the dev-server command instead.
 ```bash
 bin/cmux-codex-launcher --profile penny
 bin/cmux-codex-launcher --choose
+bin/cmux-codex-launcher --codex
+bin/cmux-codex-launcher --codex --reset-task
 bin/cmux-codex-launcher --choose --query "pricing page" --dry-run
 bin/cmux-codex-launcher --project /path/to/repo --name "My Repo"
 bin/cmux-codex-launcher --resume-last
@@ -122,8 +160,10 @@ bin/cmux-codex-launcher --autostart-roles --profile penny
 
 ## Why This Shape
 
-The implementation follows current cmux patterns:
+The implementation follows Codex and cmux patterns:
 
+- repo-scoped `.codex/config.toml` plus small Markdown files for durable
+  Codex-app behavior
 - project-local `.cmux/cmux.json` commands and actions when a repo should carry
   its own layout
 - a temporary chooser workspace for the plus button; after the chooser creates
@@ -134,8 +174,9 @@ The implementation follows current cmux patterns:
 - `codex app <path>` for the desktop app when available
 
 See [docs/launcher-design.md](docs/launcher-design.md) and
-[docs/cmux-cockpit-loadout.md](docs/cmux-cockpit-loadout.md) for the design
-notes, success criteria, and external references. See
+[docs/codex-app-workflow.md](docs/codex-app-workflow.md) for the Codex-first
+path, and [docs/cmux-cockpit-loadout.md](docs/cmux-cockpit-loadout.md) for the
+cmux cockpit. See
 [docs/codex-terminal-profile.md](docs/codex-terminal-profile.md) for the
 reasoning-effort defaults and [docs/project-signals.md](docs/project-signals.md)
 for the optional project-signal tools.
