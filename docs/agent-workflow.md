@@ -38,10 +38,30 @@ Good launcher behavior is explicit:
 - `lead`: scope, repo state, task split, integration, final answer.
 - `build`: implementation only; smallest coherent change.
 - `verify`: tests, typecheck, build, browser/runtime proof when relevant.
-- `ship`: branch/origin/status, commits, pushes when the target repo asks for it.
+- `ship`: branch/origin/status, commits, pushes, release hygiene.
 
 Profile-specific roles can replace this generic set when the target project has
 known ownership boundaries.
+
+## Before Editing
+
+Do not pick a path silently when the task is ambiguous.
+
+Before implementation, name:
+
+- assumptions that affect the path
+- interpretations that would produce different diffs
+- success criteria and the command or runtime proof for each criterion
+- the files or surfaces expected to change
+
+If the user asks for something broad, reduce it to a verifiable goal. If the
+goal cannot be made verifiable from local context, ask before editing.
+
+Example:
+
+1. Add chooser regression test -> verify: `bash scripts/test-launcher.sh`
+2. Update launcher behavior -> verify: `--choose --query penny --dry-run`
+3. Update cmux config -> verify: `cmux config validate`
 
 ## Experiment Discipline
 
@@ -56,6 +76,9 @@ For iterative launcher changes, use a small loop:
 This mirrors the useful part of an autonomous experiment loop without letting
 agents rewrite unrelated surfaces.
 
+Keep changes only when the check proves improvement. If the check is neutral and
+the code is more complex, simplify or discard the change.
+
 ## Context Reset
 
 - Treat about 80% context used as the reset point.
@@ -67,8 +90,11 @@ agents rewrite unrelated surfaces.
 ## Publish Boundary
 
 - This launcher repo commits focused changes on `main`.
-- Push this launcher repo only when the user asks to publish/push or the task
-  explicitly requires GitHub publication.
+- Publish mode is `auto` unless the user explicitly asks for local-only work.
+- Commit and push each finished repo-visible file change immediately after
+  verification.
+- Prefer one commit per finished file by default. Group files only when they are
+  inseparable, such as source plus generated output.
 - Launched target projects follow their own `AGENTS.md`.
 - Penny asks agents to commit and push finished repo-visible changes on `main`.
 - Private, scratch, partial, failing, and unverified work should stay out of
@@ -78,7 +104,11 @@ agents rewrite unrelated surfaces.
 
 - Ask only when ambiguity changes scope, data exposure, architecture, or publish
   behavior.
-- Prefer the simplest complete change.
+- Prefer the simplest complete change; no speculative features, abstractions, or
+  configurability.
 - Add regression coverage when a bug was observed and the check is cheap.
+- Do not edit adjacent code, docs, formatting, or config unless the current
+  request requires it.
+- Mention unrelated cleanup opportunities; do not perform them unless asked.
 - Every changed line should trace to the request, a verified bug, or cleanup
   made necessary by the current change.
