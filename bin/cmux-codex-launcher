@@ -534,7 +534,10 @@ direct_path_candidate() {
   [ -e "$path" ] || return 1
 
   if [ -d "$path" ]; then
-    project_dir="$(git -C "$path" rev-parse --show-toplevel 2>/dev/null || cd "$path" && pwd)"
+    project_dir="$(git -C "$path" rev-parse --show-toplevel 2>/dev/null || true)"
+    if [ -z "$project_dir" ]; then
+      project_dir="$(cd "$path" && pwd)"
+    fi
     label="$(basename "$project_dir")"
     repo_ref="$(git_origin_ref_for "$project_dir" 2>/dev/null || true)"
     candidate_line 200 "local-repo" "$label" "$project_dir" "$repo_ref" "$project_dir"
