@@ -11,8 +11,8 @@ read_when:
 
 - `user`: Prefer cmux plus Codex CLI for coding workstreams, logs, preview, and verification.
 - `user`: Prefer the Codex desktop app for reading, learning, strategy, and broader product context.
-- `user`: No launcher should ask which project is being worked on when the intended project is known.
-- `user`: The default no-argument workflow should open Penny ready to code.
+- `user`: Pressing the cmux launcher should ask what file/app/repo is being worked on, infer the local checkout and GitHub target, then open the right cockpit in one step.
+- `user`: Deterministic profile launches should still exist for scripts and saved project commands.
 - `user`: Penny launcher tabs should use Codex reasoning effort `xhigh` when the user says "extra high."
 - `user`: Keep role prompts specific and avoid loading every tab with irrelevant context.
 - `user`: Use safe fixtures and explicit docs for Penny demo work; avoid live connector fragility in launcher prompts.
@@ -21,6 +21,7 @@ read_when:
 
 - `repo`: Canonical GitHub repo slug is `picturesuo/cmux-codex-launcher`.
 - `repo`: Main entrypoint is `bin/cmux-codex-launcher`.
+- `repo`: Interactive chooser mode is `bin/cmux-codex-launcher --choose`.
 - `repo`: Default profile is `profiles/penny.env`.
 - `repo`: User override profiles live in `~/.config/cmux-codex-launcher/profiles/<name>.env`.
 - `repo`: Launch state lives in `~/.config/cmux-codex-launcher/state/last.env`.
@@ -29,11 +30,16 @@ read_when:
 - `repo`: The launcher opens Codex Desktop with `codex app <project path>` when enabled.
 - `repo`: The plan tab does not auto-run `cmux markdown open`; run the printed command after launch to avoid workspace recursion during startup.
 - `repo`: Project-local cmux actions live in `.cmux/cmux.json`.
+- `repo`: Global cmux launcher action lives in `~/.config/cmux/cmux.json` and points at `--choose`.
+- `repo`: User wrapper `/Users/bensuo/codex-launchpad.sh` delegates no-argument launches to `--choose`.
+- `repo`: `CMUX_CODEX_SEARCH_ROOTS` overrides local fuzzy search roots.
+- `repo`: `CMUX_CODEX_PROJECTS_DIR` overrides where GitHub-only matches are cloned.
 - `repo`: `scripts/test-launcher.sh` is the main smoke test.
 - `repo`: `scripts/doctor.sh` checks local prerequisites and Penny profile resolution.
 - `repo`: `scripts/install-local.sh` creates `~/bin/cmux-codex-launcher`.
 - `repo`: `CML_AUTOSTART_ROLES=false` opens role tabs idle; use `--autostart-roles` only for intentional background agents.
 - `repo`: Public files must not contain secrets, tokens, OAuth credentials, private data, or local `.env` contents.
+- `repo`: Dynamic chooser cockpits use `lead`, `build`, `verify`, and `ship` roles.
 
 ## Penny Profile Facts
 
@@ -52,8 +58,11 @@ read_when:
 - `external`: cmux project configs use `.cmux/cmux.json` for local actions, commands, and layouts.
 - `external`: cmux supports `new-workspace --layout` for scripted split layouts.
 - `external`: Codex CLI supports `codex app <path>` on macOS to open Codex Desktop on a workspace path.
+- `external`: Karpathy's `autoresearch` treats Markdown as the human-written program for agents, with explicit editable files, fixed evaluation, and keep/discard loops.
+- `external`: Steinberger's `agent-scripts` keeps AGENTS guidance terse, routing-heavy, and focused on hard rules, with push only on request.
 
 ## Retrieval Hints
 
 - Search this file, `README.md`, `tools.md`, and `docs/project-profiles.md` before broader search.
 - Use `bin/cmux-codex-launcher --profile penny --dry-run` to inspect resolved profile state.
+- Use `bin/cmux-codex-launcher --choose --query <hint> --dry-run` to inspect chooser resolution.

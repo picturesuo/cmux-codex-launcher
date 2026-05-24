@@ -13,6 +13,9 @@ commands that exist here over copied commands from older launcher repos.
 Safe examples:
 
 ```bash
+bin/cmux-codex-launcher --choose
+bin/cmux-codex-launcher --choose --query penny --dry-run
+bin/cmux-codex-launcher --choose --query "docs/launcher-design" --dry-run
 bin/cmux-codex-launcher --profile penny --dry-run
 bin/cmux-codex-launcher --profile penny
 bin/cmux-codex-launcher --resume-last
@@ -20,6 +23,13 @@ bin/cmux-codex-launcher --status-last
 bin/cmux-codex-launcher --project /path/to/repo --name "Project"
 bin/cmux-codex-launcher --print-layout --profile penny
 bin/cmux-codex-launcher --autostart-roles --profile penny
+```
+
+Environment overrides:
+
+```bash
+CMUX_CODEX_SEARCH_ROOTS="$HOME/Desktop:$HOME/Projects" bin/cmux-codex-launcher --choose
+CMUX_CODEX_PROJECTS_DIR="$HOME/Projects" bin/cmux-codex-launcher --choose
 ```
 
 ### `profiles/*.env`
@@ -32,7 +42,8 @@ bin/cmux-codex-launcher --autostart-roles --profile penny
 
 ### `scripts/test-launcher.sh`
 
-- Purpose: run shell syntax checks, validate layout JSON, and ensure Penny profile resolution.
+- Purpose: run shell syntax checks, validate layout JSON, and ensure Penny,
+  dynamic, and file-picker resolution.
 - Location: `scripts/test-launcher.sh`
 
 ```bash

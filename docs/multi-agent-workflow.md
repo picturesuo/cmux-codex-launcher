@@ -7,7 +7,8 @@ read_when:
 
 # Multi-Agent Workflow
 
-Use multiple Codex tabs only when the work has clean ownership boundaries.
+Use multiple Codex tabs only when the work has clean ownership boundaries and a
+shared target/GitHub repo is already resolved.
 
 ## When To Split Work
 
@@ -30,6 +31,17 @@ Do not split work when:
 - Keep the visible tab on the task you are actively steering.
 - Use cmux unread state and notifications for background tabs instead of keeping every tab split on screen.
 - Update the shared context before handoff or compaction.
+- Do not let multiple tabs edit the same file unless the lead tab is explicitly
+  coordinating the sequence.
+- A tab that finishes must report changed files, verification, residual risk,
+  and whether anything needs shipping.
+
+## Dynamic Chooser Roles
+
+- `lead` owns coordination, git status, and integration.
+- `build` owns implementation.
+- `verify` owns tests, typecheck/build, and runtime proof.
+- `ship` owns branch, origin, commit, push, release, and closeout hygiene.
 
 ## Penny Default Roles
 
@@ -44,3 +56,5 @@ Do not split work when:
 - Keep write scopes disjoint whenever possible.
 - Check `git status` and `git diff` before integrating another tab's work.
 - Follow the target repo's `AGENTS.md` for commit and push behavior.
+- If the selected GitHub target does not match `origin`, stop and resolve that
+  mismatch before making repo-visible changes.

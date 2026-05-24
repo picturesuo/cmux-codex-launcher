@@ -3,7 +3,7 @@
 A small macOS launcher for opening a ready-to-work cmux coding cockpit and the
 Codex desktop app on the same project.
 
-It is built for the current Peter-style split:
+It is built for the current Steinberger-style split:
 
 - Codex app: reading, knowledge work, learning, Appshots, and strategy.
 - cmux + Codex CLI: coding workstreams, preview, logs, and verification.
