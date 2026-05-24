@@ -11,6 +11,7 @@ read_when:
 
 - `user`: Prefer cmux plus Codex CLI for coding workstreams, logs, preview, and verification.
 - `user`: Prefer the Codex desktop app for reading, learning, strategy, and broader product context.
+- `user`: Now wants a Codex-app-first path that can replace the terminal cockpit for everyday work while preserving the Markdown loop and publish workflow from Ghostty/cmux.
 - `user`: Pressing the cmux launcher should ask what file/app/repo is being worked on, infer the local checkout and GitHub target, then open the right cockpit in one step.
 - `user`: After project selection, the chooser should ask for an explicit yes/no confirmation before using the inferred GitHub contribution target.
 - `user`: Role workspaces should stay clean: left sidebar role entry, role-specific Codex surface, and preview surface only. Avoid hidden plan/doc/helper tabs inside each role.
@@ -26,6 +27,9 @@ read_when:
 - `repo`: Canonical GitHub repo slug is `picturesuo/cmux-codex-launcher`.
 - `repo`: Main entrypoint is `bin/cmux-codex-launcher`.
 - `repo`: Interactive chooser mode is `bin/cmux-codex-launcher --choose`.
+- `repo`: Codex-app-first mode is `bin/cmux-codex-launcher --codex`; it opens Codex Desktop, skips cmux, and seeds missing target-repo workflow files.
+- `repo`: `--seed-codex-files` creates missing `AGENTS.md`, `docs/agent-workflow.md`, `docs/queue.md`, `docs/knowledge.md`, and `.codex/config.toml` in a target repo.
+- `repo`: `--reset-task` refreshes only the mutable `Codex Task` block in the launcher shared context.
 - `repo`: Default profile is `profiles/penny.env`.
 - `repo`: User override profiles live in `~/.config/cmux-codex-launcher/profiles/<name>.env`.
 - `repo`: Launch state lives in `~/.config/cmux-codex-launcher/state/last.env`.
