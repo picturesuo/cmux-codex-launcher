@@ -109,6 +109,34 @@ Launcher implication:
 - Repeated launcher work should become a small script or doc only after the
   manual flow is proven.
 
+## Simon Willison Pattern
+
+Sources:
+
+- https://simonwillison.net/2025/Oct/5/parallel-coding-agents/
+- https://simonwillison.net/2025/Oct/14/agentic-engineering/
+
+Useful details:
+
+- Parallel agents are most valuable when the review bottleneck stays under
+  control.
+- Good parallel work categories are research proof-of-concepts, system
+  archaeology, small maintenance, and carefully specified directed work.
+- Research agents can answer whether a library or approach works without
+  landing their code.
+- Explanations produced during codebase archaeology should be saved because
+  they become useful context for later prompts.
+- Several terminal sessions are reasonable when tasks are independent or
+  low-risk; risky work needs stronger isolation.
+
+Launcher implication:
+
+- The launcher should not assume every tab is an implementation tab.
+- The `lead` tab should be able to send research or archaeology work to other
+  visible panes and then preserve useful notes in shared context or docs.
+- The `verify` and `ship` roles exist because the bottleneck is reviewing and
+  landing work, not generating more code.
+
 ## cmux Pattern
 
 Sources:
@@ -132,4 +160,3 @@ Launcher implication:
 - Browser previews, markdown plans, dev servers, and role tabs belong in one
   repeatable layout.
 - cmux config changes must be backed up, validated, and reloaded.
-
