@@ -55,7 +55,7 @@ For a profile, the launcher can open:
 
 - a set of left-sidebar cmux workspaces, one per Codex role
 - an optional dev-server workspace
-- an optional browser preview workspace
+- a browser preview as the right half of each role workspace when configured
 - the cmux Feed in the right sidebar for agent messages and approvals
 - the Codex desktop app for the same workspace path and model settings
 

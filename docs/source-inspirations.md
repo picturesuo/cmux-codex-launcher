@@ -119,7 +119,7 @@ Useful patterns:
 Launcher adaptation:
 
 - Default cmux launches now create one left-sidebar workspace per role.
-- Each role workspace contains one Codex surface, so only one agent is visible
-  at a time.
+- Each role workspace contains one Codex surface on the left and, when a
+  preview URL is configured, one browser preview on the right.
 - cmux Feed and notification hooks provide the attention signal instead of
   requiring the user to scan every agent surface.

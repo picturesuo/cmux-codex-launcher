@@ -318,6 +318,22 @@ single_surface_layout() {
   printf '{"pane":{"surfaces":[%s]}}' "$surface_json"
 }
 
+split_preview_layout() {
+  local left_surface_json=$1
+  local preview_url=${2:-}
+  local right_surface_json
+
+  if [ -z "$preview_url" ]; then
+    single_surface_layout "$left_surface_json"
+    return
+  fi
+
+  right_surface_json="$(browser_surface "preview" "$preview_url")"
+  printf '{"direction":"horizontal","split":0.5,"children":[{"pane":{"surfaces":[%s]}},{"pane":{"surfaces":[%s]}}]}' \
+    "$left_surface_json" \
+    "$right_surface_json"
+}
+
 build_role_prompt() {
   local role=$1
   local project_name=$2
@@ -1006,7 +1022,7 @@ build_workspace_plan() {
 
   for role in "${CML_ROLE_NAMES[@]}"; do
     surface="$(role_surface_for "$role" "$project_name" "$project_dir" "$session_file")"
-    layout="$(single_surface_layout "$surface")"
+    layout="$(split_preview_layout "$surface" "${CML_PREVIEW_URL:-}")"
     entries+=("$(workspace_entry_json "$project_name: $role" "$CML_WORKSPACE_DESCRIPTION" "$layout")")
   done
 
@@ -1015,12 +1031,6 @@ build_workspace_plan() {
     surface="$(terminal_surface "dev-server" "$dev_command")"
     layout="$(single_surface_layout "$surface")"
     entries+=("$(workspace_entry_json "$project_name: dev-server" "Development server for $project_name" "$layout")")
-  fi
-
-  if [ -n "${CML_PREVIEW_URL:-}" ]; then
-    surface="$(browser_surface "preview" "$CML_PREVIEW_URL")"
-    layout="$(single_surface_layout "$surface")"
-    entries+=("$(workspace_entry_json "$project_name: preview" "Browser preview for $project_name" "$layout")")
   fi
 
   entries_json="$(join_comma "${entries[@]}")"
@@ -1058,17 +1068,6 @@ launch_sidebar_workspaces() {
   local session_file=$3
   local role surface layout dev_command i focus
 
-  if [ -n "${CML_PREVIEW_URL:-}" ]; then
-    surface="$(browser_surface "preview" "$CML_PREVIEW_URL")"
-    layout="$(single_surface_layout "$surface")"
-    cmux new-workspace \
-      --name "$project_name: preview" \
-      --description "Browser preview for $project_name" \
-      --cwd "$project_dir" \
-      --layout "$layout" \
-      --focus false
-  fi
-
   dev_command="${CML_DEV_COMMAND:-}"
   if [ -n "$dev_command" ]; then
     surface="$(terminal_surface "dev-server" "$dev_command")"
@@ -1084,7 +1083,7 @@ launch_sidebar_workspaces() {
   for ((i = ${#CML_ROLE_NAMES[@]} - 1; i >= 0; i--)); do
     role="${CML_ROLE_NAMES[$i]}"
     surface="$(role_surface_for "$role" "$project_name" "$project_dir" "$session_file")"
-    layout="$(single_surface_layout "$surface")"
+    layout="$(split_preview_layout "$surface" "${CML_PREVIEW_URL:-}")"
     if [ "$i" -eq 0 ]; then
       focus="$FOCUS_WORKSPACE"
     else

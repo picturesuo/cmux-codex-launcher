@@ -72,8 +72,9 @@ When no profile matches:
 - `ship`: branch/origin/commit/push hygiene
 
 The dynamic cockpit can include a dev server and browser preview only when the
-repo clearly exposes a standard `dev` command and likely local URL. Those open
-as their own sidebar workspaces rather than as default splits or surface tabs.
+repo clearly exposes a standard `dev` command and likely local URL. The dev
+server opens as a background sidebar workspace; the browser preview opens as
+the right half of each role workspace rather than as another tab or pane pile.
 
 ## Sources
 

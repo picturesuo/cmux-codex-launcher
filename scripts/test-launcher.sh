@@ -35,6 +35,11 @@ case "$dry_run" in
   * ) printf 'dry run did not create a left-sidebar lead workspace\n' >&2; exit 1 ;;
 esac
 
+case "$dry_run" in
+  *'"split":0.5'*'"name":"preview"'* ) ;;
+  * ) printf 'dry run did not put preview beside role workspace\n' >&2; exit 1 ;;
+esac
+
 picker_dry_run="$("$ROOT/bin/cmux-codex-launcher" --choose --query penny --dry-run)"
 
 case "$picker_dry_run" in
