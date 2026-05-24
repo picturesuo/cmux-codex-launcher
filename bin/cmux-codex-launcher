@@ -392,13 +392,46 @@ search_roots() {
   IFS=$old_ifs
 }
 
+compact_search_text() {
+  printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]'
+}
+
+is_subsequence() {
+  local needle=$1
+  local haystack=$2
+
+  [ -n "$needle" ] && [ -n "$haystack" ] || return 1
+  awk -v needle="$needle" -v haystack="$haystack" '
+    BEGIN {
+      cursor = 1
+      for (i = 1; i <= length(needle); i++) {
+        char = substr(needle, i, 1)
+        found = 0
+        for (; cursor <= length(haystack); cursor++) {
+          if (substr(haystack, cursor, 1) == char) {
+            found = 1
+            cursor++
+            break
+          }
+        }
+        if (!found) {
+          exit 1
+        }
+      }
+      exit 0
+    }
+  '
+}
+
 score_candidate() {
   local query=$1
   local haystack=$2
-  local query_lower haystack_lower word clean score
+  local query_lower haystack_lower word clean score compact_query compact_haystack
 
   query_lower="$(printf '%s' "$query" | tr '[:upper:]' '[:lower:]')"
   haystack_lower="$(printf '%s' "$haystack" | tr '[:upper:]' '[:lower:]')"
+  compact_query="$(compact_search_text "$query")"
+  compact_haystack="$(compact_search_text "$haystack")"
   score=0
 
   for word in $query_lower; do
@@ -409,6 +442,17 @@ score_candidate() {
       *) score=$((score - 8)) ;;
     esac
   done
+
+  if [ "${#compact_query}" -ge 3 ]; then
+    case "$compact_haystack" in
+      *"$compact_query"*) score=$((score + ${#compact_query} + 14)) ;;
+      *)
+        if is_subsequence "$compact_query" "$compact_haystack"; then
+          score=$((score + ${#compact_query} + 6))
+        fi
+        ;;
+    esac
+  fi
 
   case "$haystack_lower" in
     "$query_lower"|*"/$query_lower"|*":$query_lower") score=$((score + 80)) ;;
@@ -437,10 +481,11 @@ candidate_line() {
 emit_local_repo_candidates() {
   local query=$1
   local root git_marker repo_dir label remote repo_ref score haystack
-  local query_lower label_lower
+  local query_lower query_compact label_lower label_compact
   local depth=${CMUX_CODEX_SEARCH_DEPTH:-5}
 
   query_lower="$(printf '%s' "$query" | tr '[:upper:]' '[:lower:]')"
+  query_compact="$(compact_search_text "$query")"
 
   search_roots | while IFS= read -r root; do
     find "$root" -maxdepth "$depth" \
@@ -458,6 +503,10 @@ emit_local_repo_candidates() {
     if [ "$label_lower" = "$query_lower" ]; then
       score=$((score + 160))
     fi
+    label_compact="$(compact_search_text "$label")"
+    if [ "${#query_compact}" -ge 3 ] && is_subsequence "$query_compact" "$label_compact"; then
+      score=$((score + 100 - ${#label_compact}))
+    fi
     [ "$score" -gt 0 ] || continue
     candidate_line "$score" "local-repo" "$label" "$repo_dir" "$repo_ref" "$remote"
   done
@@ -467,6 +516,7 @@ emit_file_candidates() {
   local query=$1
   local first root file project_dir repo_ref rel score haystack
   local depth=${CMUX_CODEX_FILE_SEARCH_DEPTH:-6}
+  local fuzzy_limit=${CMUX_CODEX_FILE_FUZZY_LIMIT:-500}
 
   first="$(printf '%s' "$query" | awk '{print $1}')"
   first="$(printf '%s' "$first" | tr -cd '[:alnum:]_.-')"
@@ -486,15 +536,46 @@ emit_file_candidates() {
     [ "$score" -gt 0 ] || continue
     candidate_line "$score" "file" "$rel" "$file" "$repo_ref" "$project_dir"
   done
+
+  case "$query" in
+    *" "* ) ;;
+    * )
+      [ "${CMUX_CODEX_FUZZY_FILES:-false}" = "true" ] || return 0
+      ;;
+  esac
+
+  command -v rg >/dev/null 2>&1 || return 0
+  search_roots | while IFS= read -r root; do
+    (
+      cd "$root" || exit 0
+      rg --files \
+        -g '!node_modules/**' \
+        -g '!.git/**' \
+        -g '!.next/**' \
+        -g '!dist/**' \
+        -g '!build/**' 2>/dev/null | head -n "$fuzzy_limit" | sed "s#^#$root/#"
+    )
+  done | while IFS= read -r file; do
+    [ -f "$file" ] || continue
+    project_dir="$(git -C "$(dirname "$file")" rev-parse --show-toplevel 2>/dev/null || dirname "$file")"
+    repo_ref="$(git_origin_ref_for "$project_dir" 2>/dev/null || true)"
+    rel="${file#$project_dir/}"
+    haystack="$rel $file $project_dir $repo_ref"
+    score="$(score_candidate "$query" "$haystack")"
+    score=$((score - 20))
+    [ "$score" -gt 0 ] || continue
+    candidate_line "$score" "file" "$rel" "$file" "$repo_ref" "$project_dir"
+  done
 }
 
 emit_github_candidates() {
   local query=$1
   local limit=${CMUX_CODEX_GITHUB_LIMIT:-200}
   local owner repo_ref url ssh_url description score haystack
-  local query_lower repo_name_lower
+  local query_lower query_compact repo_name_lower repo_name_compact
 
   query_lower="$(printf '%s' "$query" | tr '[:upper:]' '[:lower:]')"
+  query_compact="$(compact_search_text "$query")"
 
   command -v gh >/dev/null 2>&1 || return 0
   owner="$(gh api user --jq .login 2>/dev/null || true)"
@@ -508,6 +589,10 @@ emit_github_candidates() {
       repo_name_lower="$(printf '%s' "${repo_ref##*/}" | tr '[:upper:]' '[:lower:]')"
       if [ "$repo_name_lower" = "$query_lower" ]; then
         score=$((score + 120))
+      fi
+      repo_name_compact="$(compact_search_text "${repo_ref##*/}")"
+      if [ "${#query_compact}" -ge 3 ] && is_subsequence "$query_compact" "$repo_name_compact"; then
+        score=$((score + 80 - ${#repo_name_compact}))
       fi
       [ "$score" -gt 0 ] || continue
       candidate_line "$score" "github-repo" "$repo_ref" "$repo_ref" "$repo_ref" "${ssh_url:-$url}"
