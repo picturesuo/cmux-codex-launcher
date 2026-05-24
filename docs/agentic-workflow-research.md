@@ -57,6 +57,9 @@ Sources:
 - https://steipete.me/posts/just-talk-to-it
 - https://github.com/steipete/agent-scripts/blob/main/AGENTS.MD
 - https://www.skills.sh/steipete/clawdis/tmux
+- https://x.com/steipete/status/1977771686176174352
+- https://x.com/steipete/status/1977175451408990379
+- https://x.com/steipete/status/1977745596380279006
 - https://websearchapi.ai/blog/openclaw-state-of-the-claw-peter-steinberger
 
 Useful details:
@@ -72,6 +75,13 @@ Useful details:
 - Prefer CLIs such as `gh` when they avoid MCP context overhead.
 - Peter's published tmux skill treats tmux as the control layer for monitoring
   Codex/Claude sessions, sending input, and scraping recent pane output.
+- A screenshot about "5 other instances" shows the real coordination hazard:
+  several helpers may be working in one repo, so each visible pane needs its
+  role, target, shared context, and GitHub boundary printed up front.
+- A screenshot of a hand-drawn CSS/layout prompt shows the value of visual
+  context over verbose text for UI work.
+- A tmux screenshot shows Codex starting a persistent dev session, waiting, and
+  capturing pane output before continuing code exploration.
 - Ask for tests after feature/fix work when behavior is not purely visual.
 - Keep human review in the loop; do not run a dark factory that merges without
   taste or review.
