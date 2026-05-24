@@ -402,7 +402,7 @@ score_candidate() {
   score=0
 
   for word in $query_lower; do
-    clean="$(printf '%s' "$word" | tr -cd '[:alnum:]_.-/')"
+    clean="$(printf '%s' "$word" | tr -cd '[:alnum:]_./-')"
     [ -n "$clean" ] || continue
     case "$haystack_lower" in
       *"$clean"*) score=$((score + ${#clean} + 20)) ;;
