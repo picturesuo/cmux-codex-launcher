@@ -16,6 +16,8 @@ read_when:
 - `user`: Penny launcher tabs should use Codex reasoning effort `xhigh` when the user says "extra high."
 - `user`: Keep role prompts specific and avoid loading every tab with irrelevant context.
 - `user`: Use safe fixtures and explicit docs for Penny demo work; avoid live connector fragility in launcher prompts.
+- `user`: Agent guidance should be explicit and non-ambiguous: think before coding, keep changes simple, edit surgically, and define verifiable success criteria before implementation.
+- `user`: Preserve Ghostty-launcher-style publishing for this repo: commit and push each finished repo-visible file change after verification unless local-only work is requested.
 
 ## Repo Facts
 
