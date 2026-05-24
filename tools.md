@@ -7,12 +7,15 @@ commands that exist here over copied commands from older launcher repos.
 
 ### `bin/cmux-codex-launcher`
 
-- Purpose: open a profiled cmux workspace and optional Codex desktop app.
+- Purpose: open a Codex-app-first workspace or a profiled cmux cockpit.
 - Location: `bin/cmux-codex-launcher`
 
 Safe examples:
 
 ```bash
+bin/cmux-codex-launcher --codex
+bin/cmux-codex-launcher --codex --query penny
+bin/cmux-codex-launcher --codex --reset-task
 bin/cmux-codex-launcher --choose
 bin/cmux-codex-launcher --choose --query penny --dry-run
 bin/cmux-codex-launcher --choose --query "docs/launcher-design" --dry-run
@@ -24,6 +27,19 @@ bin/cmux-codex-launcher --project /path/to/repo --name "Project"
 bin/cmux-codex-launcher --print-layout --profile penny
 bin/cmux-codex-launcher --autostart-roles --profile penny
 ```
+
+Codex-app-first examples:
+
+```bash
+bin/cmux-codex-launcher --codex --profile penny
+bin/cmux-codex-launcher --codex --project /path/to/repo --name "Project"
+bin/cmux-codex-launcher --codex --no-seed-codex-files --profile penny
+bin/cmux-codex-launcher --codex --no-app --project /tmp/repo --name "Seed Only"
+```
+
+`--codex` opens Codex Desktop, skips cmux, and creates missing target-repo
+workflow files: `AGENTS.md`, `docs/agent-workflow.md`, `docs/queue.md`,
+`docs/knowledge.md`, and `.codex/config.toml`.
 
 Environment overrides:
 
@@ -56,6 +72,7 @@ Ten-pass launcher verification:
 for i in 1 2 3 4 5 6 7 8 9 10; do
   printf 'pass %s\n' "$i"
   bash scripts/test-launcher.sh >/dev/null
+  bin/cmux-codex-launcher --codex --project "$PWD" --name Launcher --dry-run >/dev/null
   bin/cmux-codex-launcher --choose --query penny --dry-run >/dev/null
   bin/cmux-codex-launcher --choose --query pnny --dry-run >/dev/null
   CMUX_CODEX_SEARCH_ROOTS="$PWD" bin/cmux-codex-launcher --choose --query 'lauch design' --dry-run >/dev/null
@@ -101,7 +118,13 @@ These files are outside the repo but should point at this project:
 /Users/bensuo/OPEN_GHOSTTY_CODEX.command
 ```
 
-They should delegate to:
+Current local behavior:
+
+- `/Users/bensuo/codex-launchpad.sh` opens `--codex` when run with no args.
+- `/Users/bensuo/OPEN_GHOSTTY_CODEX.command` inherits that Codex-app-first path.
+- `/Users/bensuo/OPEN_CMUX_CODEX.command` passes `--choose` for the old cmux cockpit.
+
+All wrappers should still delegate to:
 
 ```text
 /Users/bensuo/Desktop/cmux-codex-launcher/bin/cmux-codex-launcher
